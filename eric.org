@@ -468,10 +468,11 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
 Unfortunately it seems like helm-projectile is making our init veerry slow.
 I'm removing this for now.
 
-* TODO Configuration tasks [25%]
+* TODO Configuration tasks [50%]
 ** DONE Complete org-drill configuration
    CLOSED: [2016-05-08 Sun 00:48]
-** TODO Investigate the major jump in loading time
+** DONE Investigate the major jump in loading time
+   CLOSED: [2016-05-08 Sun 01:08]
    We have gone from 1 second in loading time to 23 seconds.
    I would be really happy to get this down to below 10 seconds..
 
