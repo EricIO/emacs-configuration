@@ -88,7 +88,6 @@ One unified place to require most of the packages that we use.
 (require 'expand-region)
 (require 'flycheck)
 (require 'helm)
-(require 'helm-projectile)
 (require 'multiple-cursors)
 (require 'org)
 (require 'org-drill)
@@ -459,10 +458,15 @@ Projectile is */the/* system for working with projects in emacs!
 We want to configure it to use helm because awesome + awesome = more awesomeness
 
 #+BEGIN_SRC emacs-lisp
-(projectile-global-mode)
-(setq projectile-completion-system 'helm)
-(helm-projectile-on)
+  ;; (use-package helm-projectile
+  ;;   :defer t)
+  ;; (projectile-global-mode)
+  ;; (setq projectile-completion-system 'helm)
+  ;; (helm-projectile-on)
 #+END_SRC
+
+Unfortunately it seems like helm-projectile is making our init veerry slow.
+I'm removing this for now.
 
 * TODO Configuration tasks [25%]
 ** DONE Complete org-drill configuration
@@ -470,5 +474,8 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
 ** TODO Investigate the major jump in loading time
    We have gone from 1 second in loading time to 23 seconds.
    I would be really happy to get this down to below 10 seconds..
+
+   This is due to helm-projectile, removing this for now until I find a
+   solution for this.
 ** TODO Add configuration for acutex
 ** TODO Switch to use-package instead of require
