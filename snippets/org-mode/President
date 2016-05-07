@@ -1,0 +1,16 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: President
+# key: prez
+# binding: direct-keybinding
+# --
+** $1 President 						      :drill:
+   1. What was the name of the $1 president of the united states?
+   2. Term of office
+   3. Party
+   4. Vice President Name (Bonus Points!)
+
+*** Answer
+    1. $2
+    2. $3 - $4
+    3. $5
+    4. $6

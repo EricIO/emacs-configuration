@@ -1,0 +1,444 @@
+#+TITLE: Eric Skoglunds Emacs Configuration
+#+OPTIONS: toc:1 h:4
+
+Inspired and stolen from [[https://github.com/mm--/dot-emacs/blob/master/jmm-emacs.org][Josh Moller-Mara's]] configuration.
+
+* Emacs initialization 
+** Visual distractions
+
+I don't want to see any startup messages or the splash screen.
+I also want to remove the scroll, menu and tool bars.
+#+BEGIN_SRC emacs-lisp
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+; Remove scroll, tool and menu bar!
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+#+END_SRC
+
+** Packages and Elisp management
+
+*** Load path setup
+
+All the directories where we look for packages sources and other elisp files
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path "~/emacs.d/elpa")
+(add-to-list 'load-path "~/.emacs.d/themes")
+(add-to-list 'load-path "~/.emacs.d/elisp")
+#+END_SRC
+
+*** Package setup
+We need to require the package library first and then initialize it so that we can
+load and install the packages we want. After that we setup the repositories that we
+want to get packages from.
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+(package-initialize)
+(setq package-archives
+      '(("melpa" . "http://melpa.org/packages/")
+	("marmalade" . "http://marmalade-repo.org/packages/")
+	("org" . "http://orgmode.org/elpa/")
+	("gnu" . "http://elpa.gnu.org/packages/")))
+#+END_SRC
+
+We are now able to require and install the programs that we need.
+First we need to check that all the packages that we want to use are
+installed and if they aren't we need to install them. To add a package 
+just add it att the end of the `my-packages` list.
+
+#+BEGIN_SRC emacs-lisp
+(when (not package-archive-contents)
+  (package-refresh-contents))
+(defvar my-packages
+  '(magit
+    helm
+    multiple-cursors
+    expand-region
+    flycheck
+    projectile
+    solarized-theme
+    auto-complete
+    async
+    yasnippet
+    org-plus-contrib
+    use-package
+    avy
+    switch-window
+    helm-projectile))
+
+(dolist (p my-packages)
+  (when (not (package-installed-p p))
+    (package-install p)))
+
+(setq use-package-verbose t)
+(require 'use-package)
+(use-package auto-compile
+  :ensure t
+  :config (auto-compile-on-load-mode))
+(setq load-prefer-newer t)
+#+END_SRC
+
+** Require packages
+One unified place to require most of the packages that we use.
+
+#+BEGIN_SRC emacs-lisp
+(require 'auto-complete-config)
+(require 'avy)
+(require 'expand-region)
+(require 'flycheck)
+(require 'helm)
+(require 'helm-projectile)
+(require 'multiple-cursors)
+(require 'org)
+(require 'org-drill)
+(require 'projectile)
+(require 'yasnippet)
+(require 'switch-window)
+#+END_SRC
+
+We also want to require some files that I've created myself, let's do that seperatly for ease of maintenance.
+
+#+BEGIN_SRC emacs-lisp
+(require 'eel)
+#+END_SRC
+** Color theme
+We can now load our color theme!
+#+BEGIN_SRC emacs-lisp
+(load-theme 'solarized-dark t)
+#+END_SRC
+
+*** Source file modes configuration
+
+Configure what modes files will be open in. Our default mode is /not/ *fundamental*
+but *org-mode* since everything should really just be org files!
+
+#+BEGIN_SRC emacs-lisp
+(setq-default major-mode 'org-mode)
+#+END_SRC
+
+Next we need to configure which mode we choose for different file endings.
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.pro\\" . prolog-mode))
+(add-to-list 'auto-mode-alist '("\\.erl\\" . erlang-mode))
+(add-to-list 'auto-mode-alist '("\\.cl\\" . common-lisp-mode))
+(add-to-list 'auto-mode-alist '("\\.js\\" . javascript-mode))
+(add-to-list 'auto-mode-alist '("\\.jsm\\" . javascript-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(org\\|org_archive\\|txt\\)$" . org-mode))
+#+END_SRC
+
+* Basic Configuration
+First of all we don't need to have any disabled commands that emacs doesn't think 
+we should use...
+
+And we really don't want to be typing `yes` or `no` all the time but want to use `y` and `n`.
+
+#+BEGIN_SRC emacs-lisp
+(setq disabled-command-function nil)
+(fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+
+I *hate* blinking cursors so that needs to go!
+#+BEGIN_SRC emacs-lisp
+(blink-cursor-mode 0)
+#+END_SRC
+
+I also have a couple configurations for some of the built in stuff, either enabling or
+disabling stuff i use or don't use.
+
+#+BEGIN_SRC emacs-lisp
+(column-number-mode 1)
+(ido-mode 1)
+(show-paren-mode 1)
+(setq show-paren-delay 0)
+(global-visual-line-mode 1)
+(global-linum-mode 1)
+(column-number-mode t)
+(electric-pair-mode t)
+(electric-indent-mode t)
+(global-font-lock-mode t)
+(global-auto-revert-mode t)
+#+END_SRC
+
+** Keymappings
+#+BEGIN_SRC emacs-lisp
+;; General
+(global-set-key "\C-xp"         'replace-string)
+(global-set-key (kbd "C-c r")   'comment-region)
+(global-set-key (kbd "C-c u")   'uncomment-region)
+(global-set-key (kbd "C-h C-s") 'switch-to-scratch)
+;; Avy
+(global-set-key (kbd "C-c C-a") 'avy-goto-char)
+(global-set-key (kbd "C-c C-w") 'avy-goto-word-1)
+(global-set-key (kbd "C-c C-l") 'avy-goto-line)
+;; Expand Region
+(global-set-key (kbd "C--")     'er/expand-region)
+;; eel related bindings
+(global-set-key (kbd "C-c C-d") 'eel-duplicate-line)
+(global-set-key (kbd "C-c f")   'eel-copy-filename-to-killring)
+;; Helm
+(global-set-key (kbd "C-x b")   'helm-mini)
+(global-set-key (kbd "C-x f")   'helm-for-files)
+(global-set-key (kbd "M-x")     'helm-M-x)
+(global-set-key (kbd "M-y")     'helm-show-kill-ring)
+(global-set-key (kbd "M-s o")   'helm-occur)
+;; Multiple cursors
+(global-set-key (kbd "C-. C-l") 'mc/edit-lines)
+(global-set-key (kbd "C-. m")   'mc/mark-next-like-this)
+(global-set-key (kbd "C-. ,")   'mc/mark-previous-like-this)
+(global-set-key (kbd "C-. a")   'mc/mark-all-like-this)
+;; Org-mode related bindings
+(global-set-key (kbd "C-c c")   'org-capture)
+(global-set-key (kbd "C-c a")   'org-agenda)
+(global-set-key (kbd "C-c l")   'org-store-link)
+;; Switch Window
+(global-set-key (kbd "C-x o")   'switch-window)
+#+END_SRC
+
+** Autocomplete configuration
+
+Configuration for yasnippet, autocomplete-mode and flycheck.
+
+#+BEGIN_SRC emacs-lisp
+(yas-global-mode 1)
+(add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
+(ac-config-default)
+(ac-set-trigger-key "TAB")
+(ac-set-trigger-key "<tab>")
+(flycheck-mode t)
+#+END_SRC
+
+Autocomplete isn't enabled on all major modes by default so we need to add 
+the modes that aren't to the `ac-modes` list.
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'ac-modes 'elixir-mode)
+(add-to-list 'ac-modes 'rust-mode)
+(add-to-list 'ac-modes 'elm-mode)
+(add-to-list 'ac-modes 'org-mode)
+#+END_SRC
+
+** Backups and autosaving
+Emacs usually puts backup files in the same directory as the current buffer.
+I like to have them colected into one directory in my .emacs.d directory.
+
+#+BEGIN_SRC emacs-lisp
+(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+#+END_SRC
+
+We save all, save version controlled. We have terrabytes of storage and don't want
+to lose anything ever!
+
+#+BEGIN_SRC emacs-lisp
+(setq delete-old-versions -1)
+(setq version-control t)
+(setq vc-make-backup-files t)
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+#+END_SRC
+
+Emacs doesn't seem to create the autosave folder for us so let's do that if it doesn't
+exist.
+
+#+BEGIN_SRC emacs-lisp
+(make-directory "~/.emacs.d/autosaves" t)
+#+END_SRC
+
+** Useful snippets
+
+Taken from emacsrocks
+
+#+BEGIN_SRC emacs-lisp
+(defadvice sgml-delete-tag (after reindent-buffer activate)
+  (cleanup-buffer))
+#+END_SRC
+
+Javascript stuff from mozilla for working with mozilla js source files.
+Enabling eslint over jshint for flycheck.
+
+#+BEGIN_SRC emacs-lisp
+(defun js-mode-hacks ()
+  ;; Set this locally so that the head.js rule continues to work
+  ;; properly.  In particular for a mochitest we want to preserve the
+  ;; "browser_" prefix.
+  (when (buffer-file-name)
+    (let ((base (file-name-nondirectory (buffer-file-name))))
+      (when (string-match "^\\([a-z]+_\\)" base)
+	(setq-local flycheck-temp-prefix (match-string 1 base)))))
+  (flycheck-mode 1))
+
+(setq-default flycheck-disabled-checkers
+	      (append flycheck-disabled-checkers
+		      '(javascript-jshint)))
+
+(add-hook 'js-mode-hook #'js-mode-hacks)
+(add-hook 'js-mode-hook
+	  (lambda ()
+	    (setq
+	     js-indent-level 2
+	     indent-tabs-mode nil)))
+#+END_SRC
+
+*** [[https://github.com/mm--/dot-emacs/blob/master/jmm-emacs.org#switch-to-scratch-buffer][Switch to scratch buffer easily]]
+#+BEGIN_SRC emacs-lisp
+(defun switch-to-scratch ()
+  "Switch to the *scratch* buffer when you need some of that elisp quickly"
+  (interactive)
+  (switch-to-buffer "*scratch*"))
+#+END_SRC
+
+* Org-mode configuration
+
+This section contains all of the configuration for org-mode and org-mode related
+settings for emacs. This is mostly based and tweeked from [[http://doc.norang.ca/org-mode.html][Org Mode - Organize Your Life In Plain Text!]] which is an amazing resource for org-mode from Bernt Hansen.
+
+Set base directory and default notes file.
+
+#+BEGIN_SRC emacs-lisp
+(setq org-directory "~/.emacs.d/org")
+(setq org-default-notes-file "~/.emacs.d/org/refile.org")
+#+END_SRC
+
+** Outline of usage
+
+I have several different files that I use to organize things in org-mode for. The default file that everything goes into is refile.org.
+Here everything goes in during the day so that I can quickly add notes, tasks and everything else that one could think about. Everything
+in this file is eventually put into the correct file for archiving and context.
+
+*** Task Files
+The current files that I use for organizing files which can be seen in the table below.
+All task files reside in the "~/.emacs.d/org/tasks" directory.
+
+|-------------+------------------------------------------------------------------|
+| Filename    | Description                                                      |
+|-------------+------------------------------------------------------------------|
+| firefox.org | Tasks related to working on mozilla projects will go here        |
+| work.org    | Tasks relating to work                                           |
+| home.org    | Personal tasks for example stuff that I need to get done at home |
+|-------------+------------------------------------------------------------------|
+
+*** Drill files
+I use drill for studying and spaced repetition learning. All of these files resides in "~/.emacs.d/org/drill"
+
+|--------------------+--------------------------------------------------------------|
+| Filename           | Description                                                  |
+|--------------------+--------------------------------------------------------------|
+| presidents.org     | Learning the name and chronology of United States Presidents |
+| eng_vocabulary.org | Expanding my english vocabulary                              |
+|--------------------+--------------------------------------------------------------|
+
+*** Notes files
+General notes file for journaling, meetings and book notes. All of these files reside in
+"~/.emacs.d/org/notes"
+
+|--------------+----------------|
+| Filename     | Description    |
+|--------------+----------------|
+| meetings.org | Meetings notes |
+| journal.org  | Journal        |
+| books.org    | Book notes     |
+| papers.org   | Paper notes    |
+|--------------+----------------|
+
+** General Configuration
+Keymappings for org-mode can be found in the [[*Keymappings][Keymappings]] part of this file.
+
+*** Agenda setup
+Agenda files is all files in the tasks directory
+
+#+BEGIN_SRC emacs-lisp
+(setq org-agenda-files '("~/.emacs.d/org/tasks"
+			 "~/.emacs.d/org/refile.org"))
+#+END_SRC
+
+** Tasks and States
+
+Some basic configuration
+
+#+BEGIN_SRC emacs-lisp
+(setq org-log-done 'time)
+(setq org-use-fast-todo-selection t)
+(setq org-treat-S-cursor-todo-selection-as-state-change nil)
+#+END_SRC
+
+The last s-expression in the above source code lets us change the state with S-left and S-right without changing or adding timestamps etc.
+
+Different todo states for different work places / bug trackers etc.
+
+#+BEGIN_SRC emacs-lisp
+(setq org-todo-keywords
+      '((sequence "TODO(t)" "|" "DONE(d)")
+	(sequence "TRIAGED(r)" "IN PROGRESS(w)" "|" "TESTING(s)" "WAITING/QA(q)" "CLOSED(c)")
+	(sequence "Assigned" "WIP" "Review-" "Review?" "Review+" "Checkin" "|" "Pushed")))
+#+END_SRC
+
+** Capture templates
+
+Here we configure a fast way to get new tasks, notes etc. into our files using org-capture.
+Entering `C-c c` we will choose one of the defined templates below and then with `C-c C-c` the new note or task will be created and placed in the appropriate file.
+
+The current templates that exists are:
+
+  - A new task (t)
+  - A new journal entry (j)
+
+#+BEGIN_SRC emacs-lisp
+(setq org-capture-templates
+      (quote (("t" "todo" entry (file "~/.emacs.d/org/tasks/refile.org")
+	       "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+	      ("j" "Journal" entry (file+datetree "~/.emacs.d/org/journal.org")
+	       "* %?\n%U\n" :clock-in t :clock-resume t))))
+#+END_SRC
+
+** Refile setup
+
+Using the standard ido from norang here. Should investigate weather we can use helm here to.
+
+#+BEGIN_SRC emacs-lisp
+(setq org-refile-targets '((nil :maxlevel . 9)
+			   (org-agenda-files :maxlevel . 9)))
+(setq org-refile-use-outline-path t)
+(setq org-refile-allow-creating-parent-nodes (quote confirm))
+(setq org-completion-use-ido t)
+(setq ido-default-buffer-method 'selected-window)
+(setq ido-default-file-method 'selected-window)
+(setq org-indirect-buffer-display 'current-window)
+
+(defun refile/verify-refile-target ()
+  "Exclude toto keywords with a done state from refile targets"
+  (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+(setq org-refile-target-verify-function 'refile/verify-refile-target)
+#+END_SRC
+
+** Org-drill
+
+
+
+* TeX and LaTeX
+
+Force the use of pdflatex (will fail if pdflatex is not installed).
+
+#+BEGIN_SRC emacs-lisp
+(setq latex-run-command "pdflatex")
+(setq text-output-extension ".pdf")
+#+END_SRC
+
+* Helm and projectile
+Helm is a nice system for narrowing selections and finding stuff. This section is not yet complete.
+
+#+BEGIN_SRC emacs-lisp
+(require 'helm-config)
+(helm-autoresize-mode t)
+(setq helm-buffers-fuzzy-matching t
+      helm-recentf-fuzzy-match t
+      helm-M-x-fuzzy-match t)
+#+END_SRC
+
+Projectile is */the/* system for working with projects in emacs!
+We want to configure it to use helm because awesome + awesome = more awesomeness
+
+#+BEGIN_SRC emacs-lisp
+(projectile-global-mode)
+(setq projectile-completion-system 'helm)
+(helm-projectile-on)
+#+END_SRC
