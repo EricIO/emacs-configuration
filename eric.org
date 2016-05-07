@@ -450,3 +450,4 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
    We have gone from 1 second in loading time to 23 seconds.
    I would be really happy to get this down to below 10 seconds..
 ** TODO Add configuration for acutex
+** TODO Switch to use-package instead of require
