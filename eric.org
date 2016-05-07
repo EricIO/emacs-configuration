@@ -102,6 +102,7 @@ We also want to require some files that I've created myself, let's do that seper
 #+BEGIN_SRC emacs-lisp
 (require 'eel)
 #+END_SRC
+
 ** Color theme
 We can now load our color theme!
 #+BEGIN_SRC emacs-lisp
@@ -120,12 +121,12 @@ but *org-mode* since everything should really just be org files!
 Next we need to configure which mode we choose for different file endings.
 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.pro\\" . prolog-mode))
-(add-to-list 'auto-mode-alist '("\\.erl\\" . erlang-mode))
-(add-to-list 'auto-mode-alist '("\\.cl\\" . common-lisp-mode))
-(add-to-list 'auto-mode-alist '("\\.js\\" . javascript-mode))
-(add-to-list 'auto-mode-alist '("\\.jsm\\" . javascript-mode))
-(add-to-list 'auto-mode-alist '("\\.\\(org\\|org_archive\\|txt\\)$" . org-mode))
+  (add-to-list 'auto-mode-alist '("\\.pro\\'" . prolog-mode))
+  (add-to-list 'auto-mode-alist '("\\.erl\\'" . erlang-mode))
+  (add-to-list 'auto-mode-alist '("\\.cl\\'" . common-lisp-mode))
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
+  (add-to-list 'auto-mode-alist '("\\.jsm\\'" . javascript-mode))
+  (add-to-list 'auto-mode-alist '("\\.\\(org\\|org_archive\\|txt\\)$" . org-mode))
 #+END_SRC
 
 * Basic Configuration
@@ -442,3 +443,10 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
 (setq projectile-completion-system 'helm)
 (helm-projectile-on)
 #+END_SRC
+
+* TODO [0%]
+** TODO Complete org-drill configuration
+** TODO Investigate the major jump in loading time
+   We have gone from 1 second in loading time to 23 seconds.
+   I would be really happy to get this down to below 10 seconds..
+** TODO Add configuration for acutex
