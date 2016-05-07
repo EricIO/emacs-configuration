@@ -444,7 +444,7 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
 (helm-projectile-on)
 #+END_SRC
 
-* TODO [0%]
+* TODO Configuration tasks [0%]
 ** TODO Complete org-drill configuration
 ** TODO Investigate the major jump in loading time
    We have gone from 1 second in loading time to 23 seconds.
