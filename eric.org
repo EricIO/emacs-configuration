@@ -412,8 +412,28 @@ Using the standard ido from norang here. Should investigate weather we can use h
 #+END_SRC
 
 ** Org-drill
+Drill mode is used for spaced repetition learning.
 
+#+BEGIN_SRC emacs-lisp
+(use-package org-drill
+  :config (progn
+	    (add-to-list 'org-modules 'org-drill)
+	    (setq org-drill-add-random-noise-to-intervals-p t)
+	    (setq org-drill-hint-separator "||")
+	    (setq org-drill-left-cloze-delimiter "<[")
+	    (setq org-drill-right-cloze-delimiter "]>")
+	    (setq org-drill-learn-fraction 0.25)))
+#+END_SRC
 
+*** org-preview-latex-fragment fix
+The function “org-preview-latex-fragment” was deprecated a while back, but org-drill still depends on it. So here’s a quick hack that will display the LaTeX in org-drill.
+
+#+BEGIN_SRC emacs-lisp
+(defun org-preview-latex-fragment ()
+  (interactive)
+  (org-remove-latex-fragment-image-overlays)
+  (org-toggle-latex-fragment '(4)))
+#+END_SRC
 
 * TeX and LaTeX
 
@@ -444,8 +464,9 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
 (helm-projectile-on)
 #+END_SRC
 
-* TODO Configuration tasks [0%]
-** TODO Complete org-drill configuration
+* TODO Configuration tasks [25%]
+** DONE Complete org-drill configuration
+   CLOSED: [2016-05-08 Sun 00:48]
 ** TODO Investigate the major jump in loading time
    We have gone from 1 second in loading time to 23 seconds.
    I would be really happy to get this down to below 10 seconds..
