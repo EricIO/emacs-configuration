@@ -430,9 +430,20 @@ The current templates that exists are:
                  "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
                 ("j" "Journal" entry (file+datetree "~/.emacs.d/org/journal.org")
                  "* %?\n%U\n" :clock-in t :clock-resume t)
-                ("c" "Code Snippet" entry (file "~/.emacs.d/org/refile.org")
-                 "* Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC" :clock-in t :clock-resume t))))
+                ("c" "Code Snippet" entry (file "~/.emacs.d/org/snippets.org")
+                 "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC" :clock-in t :clock-resume t))))
 #+END_SRC
+
+*** TODO Make the code snippets go into the snippet file under the correct heading by default
+
+    My snippets file is organized with the languages as the top level heading. 
+    Currently all new snippets first go into the refile file and later refiled under the
+    correct language header. It would be neat to get it in under the correct heading directly.
+    
+    My guess is that we can use the file+function feature of the template and build a custom
+    function that will find the correct headline someway.
+   
+    Crude first idea is to just prompt the user for a headline and then go to that headline.
 
 ** Refile setup
 
