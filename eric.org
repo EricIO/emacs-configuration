@@ -65,7 +65,8 @@ just add it att the end of the `my-packages` list.
     use-package
     avy
     switch-window
-    helm-projectile))
+    helm-projectile
+    paredit))
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
@@ -287,6 +288,41 @@ Enabling eslint over jshint for flycheck.
   (switch-to-buffer "*scratch*"))
 #+END_SRC
 
+* Lisp configuration
+
+Since we're using emacs, configuration related to LISP gets its own section!
+
+#+BEGIN_SRC emacs-lisp
+  (require 'paredit)
+  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+  (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+#+END_SRC
+
+** Emacs Lisp
+
+Emacs lisp is the language that is used within emacs. Emacs comes with two documents
+documenting the language and emacs specific concepts.
+
+   1. [[info:eintr#Top][Emacs lisp intro]]
+   2. [[info:dir#Top][Emacs Lisp Reference]]
+
+
+#+BEGIN_SRC emacs-lisp
+(use-package "eldoc"
+  :diminish eldoc-mode
+  :commands turn-on-eldoc-mode
+  :defer t
+  :init
+  (progn
+    (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+    (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
+    (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
+#+END_SRC
+
 * Org-mode configuration
 
 This section contains all of the configuration for org-mode and org-mode related
@@ -375,24 +411,30 @@ Different todo states for different work places / bug trackers etc.
 ** Capture templates
 
 Here we configure a fast way to get new tasks, notes etc. into our files using org-capture.
-Entering `C-c c` we will choose one of the defined templates below and then with `C-c C-c` the new note or task will be created and placed in the appropriate file.
+Entering `C-c c` we will choose one of the defined templates below and then with `C-c C-c` the new note or task will be created and placed in the appropriate file. Most captures just go into the refile file for later refiling to the appropriate file. This is for quick capturing of new stuff that comes in so as to not break up my workflow all to much.
+
+Mote information about templates are found at: [[http://orgmode.org/manual/Capture-templates.html][Capture Templates at orgmode.org]]
 
 The current templates that exists are:
 
   - A new task (t)
+    Captures a new todo item task
   - A new journal entry (j)
+    Captures a new journal entry
+  - A new code snippet (c)
+    Captures the selected region for a new code snippet
 
 #+BEGIN_SRC emacs-lisp
-(setq org-capture-templates
-      (quote (("t" "todo" entry (file "~/.emacs.d/org/tasks/refile.org")
-	       "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
-	      ("j" "Journal" entry (file+datetree "~/.emacs.d/org/journal.org")
-	       "* %?\n%U\n" :clock-in t :clock-resume t))))
+  (setq org-capture-templates
+        (quote (("t" "todo" entry (file "~/.emacs.d/org/tasks/refile.org")
+                 "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+                ("j" "Journal" entry (file+datetree "~/.emacs.d/org/journal.org")
+                 "* %?\n%U\n" :clock-in t :clock-resume t)
+                ("c" "Code Snippet" entry (file "~/.emacs.d/org/refile.org")
+                 "* Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC" :clock-in t :clock-resume t))))
 #+END_SRC
 
 ** Refile setup
-
-Using the standard ido from norang here. Should investigate weather we can use helm here to.
 
 #+BEGIN_SRC emacs-lisp
 (setq org-refile-targets '((nil :maxlevel . 9)
