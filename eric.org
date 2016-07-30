@@ -76,6 +76,22 @@ just add it att the end of the `my-packages` list.
 (dolist (p my-packages)
   (when (not (package-installed-p p))
      (package-install p)))
+    helm-projectile
+    paredit))
+  (defun my-packages-installed-p ()
+    (loop for p in my-packages
+          when (not (package-installed-p p)) do (return nil)
+          finally (return t)))
+
+  (unless (my-packages-installed-p)
+    ;; check for new packages (package versions)
+    (message "Refreshing Package Contents")
+    (package-refresh-contents)
+    (message "Installing missing packages")
+    ;; install the missing packages
+    (dolist (p my-packages)
+      (when (not (package-installed-p p))
+        (package-install p))))
 
 (setq use-package-verbose t)
 (require 'use-package)
