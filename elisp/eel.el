@@ -14,5 +14,8 @@
 (defun eel-copy-filename-to-killring ()
   "Copies the filename of the buffer into the clipboard"
   (interactive)
-  (kill-new (buffer-file-name))
-  (message buffer-file-name))
+  (if (buffer-file-name)
+      (progn 
+	(kill-new (buffer-file-name))
+	(message buffer-file-name))
+    (message "Buffer has no file name associated with it")))

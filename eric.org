@@ -53,6 +53,8 @@ just add it att the end of the `my-packages` list.
 (defvar my-packages
   '(magit
     helm
+    helm-projectile
+    helm-ag
     multiple-cursors
     expand-region
     flycheck
@@ -65,12 +67,15 @@ just add it att the end of the `my-packages` list.
     use-package
     avy
     switch-window
-    helm-projectile
-    paredit))
+    paredit
+    rust-mode
+    nyan-mode
+    hardcore-mode
+    annoying-arrows-mode))
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
-    (package-install p)))
+     (package-install p)))
 
 (setq use-package-verbose t)
 (require 'use-package)
@@ -95,6 +100,9 @@ One unified place to require most of the packages that we use.
 (require 'projectile)
 (require 'yasnippet)
 (require 'switch-window)
+(require 'helm-projectile)
+(require 'hardcore-mode)
+(require 'annoying-arrows-mode)
 #+END_SRC
 
 We also want to require some files that I've created myself, let's do that seperatly for ease of maintenance.
@@ -124,8 +132,8 @@ Next we need to configure which mode we choose for different file endings.
   (add-to-list 'auto-mode-alist '("\\.pro\\'" . prolog-mode))
   (add-to-list 'auto-mode-alist '("\\.erl\\'" . erlang-mode))
   (add-to-list 'auto-mode-alist '("\\.cl\\'" . common-lisp-mode))
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
-  (add-to-list 'auto-mode-alist '("\\.jsm\\'" . javascript-mode))
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+  (add-to-list 'auto-mode-alist '("\\.jsm\\'" . js2-mode))
   (add-to-list 'auto-mode-alist '("\\.\\(org\\|org_archive\\|txt\\)$" . org-mode))
 #+END_SRC
 
@@ -160,6 +168,9 @@ disabling stuff i use or don't use.
 (electric-indent-mode t)
 (global-font-lock-mode t)
 (global-auto-revert-mode t)
+(nyan-mode t)
+(global-hardcore-mode)
+(global-annoying-arrows-mode)
 #+END_SRC
 
 ** Keymappings
@@ -170,9 +181,9 @@ disabling stuff i use or don't use.
 (global-set-key (kbd "C-c u")   'uncomment-region)
 (global-set-key (kbd "C-h C-s") 'switch-to-scratch)
 ;; Avy
-(global-set-key (kbd "C-c C-a") 'avy-goto-char)
-(global-set-key (kbd "C-c C-w") 'avy-goto-word-1)
-(global-set-key (kbd "C-c C-l") 'avy-goto-line)
+(global-set-key (kbd "M-g c") 'avy-goto-char)
+(global-set-key (kbd "M-g w") 'avy-goto-word-1)
+(global-set-key (kbd "M-g l") 'avy-goto-line)
 ;; Expand Region
 (global-set-key (kbd "C--")     'er/expand-region)
 ;; eel related bindings
@@ -195,6 +206,15 @@ disabling stuff i use or don't use.
 (global-set-key (kbd "C-c l")   'org-store-link)
 ;; Switch Window
 (global-set-key (kbd "C-x o")   'switch-window)
+;; hardcore-mode
+(define-key key-translation-map [?\C-h] [?\C-?])
+(global-set-key (kbd "<f1>") 'help-command)
+#+END_SRC
+
+Set up avy default mode, with this we get C-' in isearch.
+
+#+BEGIN_SRC emacs-lisp
+(avy-setup-default)
 #+END_SRC
 
 ** Autocomplete configuration
@@ -259,21 +279,29 @@ Enabling eslint over jshint for flycheck.
 
 #+BEGIN_SRC emacs-lisp
 (defun js-mode-hacks ()
+  (setq-local mode-name "JS")
   ;; Set this locally so that the head.js rule continues to work
   ;; properly.  In particular for a mochitest we want to preserve the
   ;; "browser_" prefix.
   (when (buffer-file-name)
     (let ((base (file-name-nondirectory (buffer-file-name))))
       (when (string-match "^\\([a-z]+_\\)" base)
-	(setq-local flycheck-temp-prefix (match-string 1 base)))))
+	(setq-local flycheck-temp-prefix (match-string 1 base))))
+    (let ((base-dir (locate-dominating-file (buffer-file-name)
+					    ".eslintignore")))
+      (when base-dir
+	(let ((eslint (expand-file-name
+		       "tools/lint/eslint/node_modules/.bin/eslint" base-dir)))
+	  (when (file-exists-p eslint)
+	    (setq-local flycheck-javascript-eslint-executable eslint))))))
   (flycheck-mode 1))
 
 (setq-default flycheck-disabled-checkers
 	      (append flycheck-disabled-checkers
 		      '(javascript-jshint)))
 
-(add-hook 'js-mode-hook #'js-mode-hacks)
-(add-hook 'js-mode-hook
+(add-hook 'js2-mode-hook #'js-mode-hacks)
+(add-hook 'js2-mode-hook
 	  (lambda ()
 	    (setq
 	     js-indent-level 2
@@ -288,7 +316,8 @@ Enabling eslint over jshint for flycheck.
   (switch-to-buffer "*scratch*"))
 #+END_SRC
 
-* Lisp configuration
+* Programming Languages
+** Lisp configuration
 
 Since we're using emacs, configuration related to LISP gets its own section!
 
@@ -302,7 +331,7 @@ Since we're using emacs, configuration related to LISP gets its own section!
   (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
 #+END_SRC
 
-** Emacs Lisp
+*** Emacs Lisp
 
 Emacs lisp is the language that is used within emacs. Emacs comes with two documents
 documenting the language and emacs specific concepts.
@@ -322,7 +351,6 @@ documenting the language and emacs specific concepts.
     (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
     (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
 #+END_SRC
-
 * Org-mode configuration
 
 This section contains all of the configuration for org-mode and org-mode related
@@ -348,7 +376,6 @@ All task files reside in the "~/.emacs.d/org/tasks" directory.
 |-------------+------------------------------------------------------------------|
 | Filename    | Description                                                      |
 |-------------+------------------------------------------------------------------|
-| firefox.org | Tasks related to working on mozilla projects will go here        |
 | work.org    | Tasks relating to work                                           |
 | home.org    | Personal tasks for example stuff that I need to get done at home |
 |-------------+------------------------------------------------------------------|
@@ -383,8 +410,9 @@ Keymappings for org-mode can be found in the [[*Keymappings][Keymappings]] part 
 Agenda files is all files in the tasks directory
 
 #+BEGIN_SRC emacs-lisp
-(setq org-agenda-files '("~/.emacs.d/org/tasks"
-			 "~/.emacs.d/org/refile.org"))
+  (setq org-agenda-files '("~/.emacs.d/org/tasks"
+                           "~/.emacs.d/org/notes/notes.org"
+                           "~/.emacs.d/org/refile.org"))
 #+END_SRC
 
 ** Tasks and States
@@ -404,8 +432,9 @@ Different todo states for different work places / bug trackers etc.
 #+BEGIN_SRC emacs-lisp
 (setq org-todo-keywords
       '((sequence "TODO(t)" "|" "DONE(d)")
-	(sequence "TRIAGED(r)" "IN PROGRESS(w)" "|" "TESTING(s)" "WAITING/QA(q)" "CLOSED(c)")
-	(sequence "Assigned" "WIP" "Review-" "Review?" "Review+" "Checkin" "|" "Pushed")))
+	(sequence "Assigned" "WIP" "Review-" "Review?" "Review+" "Checkin" "|" "Pushed")
+	(sequence "In Progress" "|" "Published")
+	(sequence "Not Read" "Reading" "|" "Read")))
 #+END_SRC
 
 ** Capture templates
@@ -428,7 +457,7 @@ The current templates that exists are:
   (setq org-capture-templates
         (quote (("t" "todo" entry (file "~/.emacs.d/org/tasks/refile.org")
                  "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
-                ("j" "Journal" entry (file+datetree "~/.emacs.d/org/journal.org")
+                ("j" "Journal" entry (file+datetree "~/.emacs.d/org/notes/journal.org")
                  "* %?\n%U\n" :clock-in t :clock-resume t)
                 ("c" "Code Snippet" entry (file "~/.emacs.d/org/snippets.org")
                  "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC" :clock-in t :clock-resume t))))
@@ -502,7 +531,7 @@ Helm is a nice system for narrowing selections and finding stuff. This section i
 #+BEGIN_SRC emacs-lisp
 (require 'helm-config)
 (helm-autoresize-mode t)
-(setq helm-buffers-fuzzy-matching t
+(setq helm-buffers-fuzzy-matching 
       helm-recentf-fuzzy-match t
       helm-M-x-fuzzy-match t)
 #+END_SRC
@@ -513,9 +542,9 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
 #+BEGIN_SRC emacs-lisp
   ;; (use-package helm-projectile
   ;;   :defer t)
-  ;; (projectile-global-mode)
+  (projectile-global-mode)
   ;; (setq projectile-completion-system 'helm)
-  ;; (helm-projectile-on)
+  (helm-projectile-on)
 #+END_SRC
 
 Unfortunately it seems like helm-projectile is making our init veerry slow.
