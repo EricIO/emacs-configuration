@@ -1,0 +1,8 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: js-named-funciton
+# key: fn
+# binding: direct-keybinding
+# --
+function $1($2) {
+$0
+}

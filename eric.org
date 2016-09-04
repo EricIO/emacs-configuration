@@ -18,7 +18,6 @@ I also want to remove the scroll, menu and tool bars.
 #+END_SRC
 
 ** Packages and Elisp management
-
 *** Load path setup
 
 All the directories where we look for packages sources and other elisp files
@@ -59,7 +58,7 @@ just add it att the end of the `my-packages` list.
       flycheck
       projectile
       solarized-theme
-      auto-complete
+      company
       async
       yasnippet
       org-plus-contrib
@@ -70,7 +69,11 @@ just add it att the end of the `my-packages` list.
       rust-mode
       nyan-mode
       hardcore-mode
-      annoying-arrows-mode))
+      annoying-arrows-mode
+      cargo
+      racer
+      flycheck-rust
+      company-go))
 
   (when (not package-archive-contents)
     (package-refresh-contents))
@@ -102,7 +105,6 @@ just add it att the end of the `my-packages` list.
 One unified place to require most of the packages that we use.
 
 #+BEGIN_SRC emacs-lisp
-(require 'auto-complete-config)
 (require 'avy)
 (require 'expand-region)
 (require 'flycheck)
@@ -230,28 +232,16 @@ Set up avy default mode, with this we get C-' in isearch.
 (avy-setup-default)
 #+END_SRC
 
-** Autocomplete configuration
+* Autocomplete configuration
 
-Configuration for yasnippet, autocomplete-mode and flycheck.
+Configuration for yasnippet, company-mode and flycheck.
 
 #+BEGIN_SRC emacs-lisp
 (yas-global-mode 1)
-(add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
-(ac-config-default)
-(ac-set-trigger-key "TAB")
-(ac-set-trigger-key "<tab>")
 (flycheck-mode t)
+(add-hook 'after-init-hook 'global-company-mode)
 #+END_SRC
 
-Autocomplete isn't enabled on all major modes by default so we need to add 
-the modes that aren't to the `ac-modes` list.
-
-#+BEGIN_SRC emacs-lisp
-(add-to-list 'ac-modes 'elixir-mode)
-(add-to-list 'ac-modes 'rust-mode)
-(add-to-list 'ac-modes 'elm-mode)
-(add-to-list 'ac-modes 'org-mode)
-#+END_SRC
 
 ** Backups and autosaving
 Emacs usually puts backup files in the same directory as the current buffer.
@@ -363,6 +353,35 @@ documenting the language and emacs specific concepts.
     (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
     (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
     (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
+#+END_SRC
+** Rust
+We use rust mode and the cargo minor mode. There is also the rustfmt package
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'rust-mode-hook 'cargo-minor-mode)
+  (add-hook 'rust-mode-hook (lambda ()
+                              (local-set-key
+                               (kbd "C-c <tab>" #'rust-format-buffer))))
+#+END_SRC
+
+Racer is the code completion and source code navigation tool for rust.
+We can use it to get nice code completion with company-mode.
+
+#+BEGIN_SRC emacs-lisp
+  (setq racer-cmd "~/.cargo/bin/racer")
+  (setq racer-rust-src-path "~/programming/open-source/rust/src")
+
+  (add-hook 'rust-mode-hook #'racer-mode)
+  (add-hook 'racer-mode-hook #'eldoc-mode)
+  (add-hook 'racer-mode-hook #'company-mode)
+  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
+#+END_SRC
+** Go
+Enable company-go as the backend for company-mode
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'go-mode-hook
+            (lambda ()
+              (set (make-local-variable 'company-backends) '(company-go))
+              (company-mode)))
 #+END_SRC
 * Org-mode configuration
 
@@ -563,6 +582,49 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
 Unfortunately it seems like helm-projectile is making our init veerry slow.
 I'm removing this for now.
 
+* Notmuch (mail)
+
+#+BEGIN_SRC emacs-lisp
+(setq mail-host-address "pagefault.se")
+(setq user-full-name "Eric Skoglund")
+(setq user-mail-adress "eric@pagefault.se")
+(setq mail-user-agent 'message-user-agent)
+(setq message-send-mail-function 'message-send-mail-with-sendmail)
+(setq message-kill-buffer-on-exit t)
+(setq mail-specify-envelope-from t)
+(setq sendmail-program "/usr/bin/msmtp"
+      mail-specify-envelope-from t
+      mail-envelope-from 'header
+      message-sendmail-envelope-from 'header)
+#+END_SRC
+
+I am using the notmuch email system to be able to read and search for emails.
+#+BEGIN_SRC emacs-lisp
+  (setq notmuch-saved-searches '((:name "inbox"
+                                        :query "tag:inbox"
+                                        :count-query "tag:inbox and tag:unread"
+                                        :key "i")
+                                 (:name "unread"
+                                        :query "tag:unread"
+                                        :key "u"   
+                                        :count-query "tag:unread")
+                                 (:name "flagged"
+                                        :query "tag:flagged"
+                                        :key "f"
+                                        :count-query "tag:flagged and tag:unread")
+                                 (:name "drafts"
+                                        :query "tag:draft"
+                                        :count-query "tag:draft"
+                                        :key "d")
+                                 (:name "all mail"
+                                        :query "*"
+                                        :count-query "*"
+                                        :key "a")
+                                 (:name "emacs-devel-unread"
+                                        :query "tag:lists and +emacs-devel and tag:unread"
+                                        :count-query "tag:lists and +emacs-devel and tag:unread"
+                                        :key "e")))
+#+END_SRC
 * TODO Configuration tasks [50%]
 ** DONE Complete org-drill configuration
    CLOSED: [2016-05-08 Sun 00:48]

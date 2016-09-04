@@ -1,0 +1,9 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: if-error-go
+# key: ierr
+# binding: direct-keybinding
+# --
+if err != nil {
+   	$1
+}
+$0
