@@ -68,8 +68,6 @@ just add it att the end of the `my-packages` list.
       paredit
       rust-mode
       nyan-mode
-      hardcore-mode
-      annoying-arrows-mode
       cargo
       racer
       flycheck-rust
@@ -116,8 +114,6 @@ One unified place to require most of the packages that we use.
 (require 'yasnippet)
 (require 'switch-window)
 (require 'helm-projectile)
-(require 'hardcore-mode)
-;;(require 'annoying-arrows-mode)
 #+END_SRC
 
 We also want to require some files that I've created myself, let's do that seperatly for ease of maintenance.
@@ -184,7 +180,6 @@ disabling stuff i use or don't use.
 (global-font-lock-mode t)
 (global-auto-revert-mode t)
 (nyan-mode t)
-(global-hardcore-mode)
 ;;(global-annoying-arrows-mode)
 #+END_SRC
 
@@ -211,9 +206,9 @@ disabling stuff i use or don't use.
 (global-set-key (kbd "M-y")     'helm-show-kill-ring)
 (global-set-key (kbd "M-s o")   'helm-occur)
 ;; Multiple cursors
-(global-set-key (kbd "C-. C-l") 'mc/edit-lines)
-(global-set-key (kbd "C-. m")   'mc/mark-next-like-this)
-(global-set-key (kbd "C-. ,")   'mc/mark-previous-like-this)
+(global-set-key (kbd "C-. l")   'mc/edit-lines)
+(global-set-key (kbd "M-n")     'mc/mark-next-like-this)
+(global-set-key (kbd "M-p")     'mc/mark-previous-like-this)
 (global-set-key (kbd "C-. a")   'mc/mark-all-like-this)
 ;; Org-mode related bindings
 (global-set-key (kbd "C-c c")   'org-capture)
@@ -221,9 +216,6 @@ disabling stuff i use or don't use.
 (global-set-key (kbd "C-c l")   'org-store-link)
 ;; Switch Window
 (global-set-key (kbd "C-x o")   'switch-window)
-;; hardcore-mode
-(define-key key-translation-map [?\C-h] [?\C-?])
-(global-set-key (kbd "<f1>") 'help-command)
 #+END_SRC
 
 Set up avy default mode, with this we get C-' in isearch.
