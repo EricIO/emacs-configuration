@@ -58,6 +58,7 @@ just add it att the end of the `my-packages` list.
       flycheck
       projectile
       solarized-theme
+      spacemacs-theme
       company
       async
       yasnippet
@@ -71,7 +72,8 @@ just add it att the end of the `my-packages` list.
       cargo
       racer
       flycheck-rust
-      company-go))
+      company-go
+      elfeed))
 
   (when (not package-archive-contents)
     (package-refresh-contents))
@@ -125,7 +127,7 @@ We also want to require some files that I've created myself, let's do that seper
 ** Color theme
 We can now load our color theme!
 #+BEGIN_SRC emacs-lisp
-(load-theme 'solarized-dark t)
+(load-theme 'spacemacs-dark t)
 #+END_SRC
 
 *** Source file modes configuration
@@ -214,8 +216,12 @@ disabling stuff i use or don't use.
 (global-set-key (kbd "C-c c")   'org-capture)
 (global-set-key (kbd "C-c a")   'org-agenda)
 (global-set-key (kbd "C-c l")   'org-store-link)
+(global-set-key (kbd "C-c i")   'org-clock-in)
+(global-set-key (kbd "C-c o")   'org-clock-out)
 ;; Switch Window
 (global-set-key (kbd "C-x o")   'switch-window)
+;; Elfeed
+(global-set-key (kbd "C-x w")   'elfeed)
 #+END_SRC
 
 Set up avy default mode, with this we get C-' in isearch.
@@ -616,6 +622,14 @@ I am using the notmuch email system to be able to read and search for emails.
                                         :query "tag:lists and +emacs-devel and tag:unread"
                                         :count-query "tag:lists and +emacs-devel and tag:unread"
                                         :key "e")))
+#+END_SRC
+* Elfeed
+#+BEGIN_SRC emacs-lisp
+  (setq elfeed-feeds
+        '("http://nullprogram.com/feed/"
+          "http://www.tedunangst.com/flak/rss"
+          "https://jeremykun.com/feed/"
+          "https://pagefault.se/atom.xml"))
 #+END_SRC
 * TODO Configuration tasks [50%]
 ** DONE Complete org-drill configuration
