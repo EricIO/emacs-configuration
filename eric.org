@@ -3,7 +3,7 @@
 
 Inspired and stolen from [[https://github.com/mm--/dot-emacs/blob/master/jmm-emacs.org][Josh Moller-Mara's]] configuration.
 
-* Emacs initialization 
+* Emacs initialization
 ** Visual distractions
 
 I don't want to see any startup messages or the splash screen.
@@ -36,14 +36,14 @@ want to get packages from.
 (package-initialize)
 (setq package-archives
       '(("melpa" . "http://melpa.org/packages/")
-	("marmalade" . "http://marmalade-repo.org/packages/")
-	("org" . "http://orgmode.org/elpa/")
-	("gnu" . "http://elpa.gnu.org/packages/")))
+        ("marmalade" . "http://marmalade-repo.org/packages/")
+        ("org" . "http://orgmode.org/elpa/")
+        ("gnu" . "http://elpa.gnu.org/packages/")))
 #+END_SRC
 
 We are now able to require and install the programs that we need.
 First we need to check that all the packages that we want to use are
-installed and if they aren't we need to install them. To add a package 
+installed and if they aren't we need to install them. To add a package
 just add it att the end of the `my-packages` list.
 
 #+BEGIN_SRC emacs-lisp
@@ -151,7 +151,7 @@ Next we need to configure which mode we choose for different file endings.
 #+END_SRC
 
 * Basic Configuration
-First of all we don't need to have any disabled commands that emacs doesn't think 
+First of all we don't need to have any disabled commands that emacs doesn't think
 we should use...
 
 And we really don't want to be typing `yes` or `no` all the time but want to use `y` and `n`.
@@ -287,26 +287,26 @@ Enabling eslint over jshint for flycheck.
   (when (buffer-file-name)
     (let ((base (file-name-nondirectory (buffer-file-name))))
       (when (string-match "^\\([a-z]+_\\)" base)
-	(setq-local flycheck-temp-prefix (match-string 1 base))))
+        (setq-local flycheck-temp-prefix (match-string 1 base))))
     (let ((base-dir (locate-dominating-file (buffer-file-name)
-					    ".eslintignore")))
+                                            ".eslintignore")))
       (when base-dir
-	(let ((eslint (expand-file-name
-		       "tools/lint/eslint/node_modules/.bin/eslint" base-dir)))
-	  (when (file-exists-p eslint)
-	    (setq-local flycheck-javascript-eslint-executable eslint))))))
+        (let ((eslint (expand-file-name
+                       "tools/lint/eslint/node_modules/.bin/eslint" base-dir)))
+          (when (file-exists-p eslint)
+            (setq-local flycheck-javascript-eslint-executable eslint))))))
   (flycheck-mode 1))
 
 (setq-default flycheck-disabled-checkers
-	      (append flycheck-disabled-checkers
-		      '(javascript-jshint)))
+              (append flycheck-disabled-checkers
+                      '(javascript-jshint)))
 
 (add-hook 'js2-mode-hook #'js-mode-hacks)
 (add-hook 'js2-mode-hook
-	  (lambda ()
-	    (setq
-	     js-indent-level 2
-	     indent-tabs-mode nil)))
+          (lambda ()
+            (setq
+             js-indent-level 2
+             indent-tabs-mode nil)))
 #+END_SRC
 
 *** [[https://github.com/mm--/dot-emacs/blob/master/jmm-emacs.org#switch-to-scratch-buffer][Switch to scratch buffer easily]]
@@ -462,9 +462,9 @@ Different todo states for different work places / bug trackers etc.
 #+BEGIN_SRC emacs-lisp
 (setq org-todo-keywords
       '((sequence "TODO(t)" "|" "DONE(d)")
-	(sequence "Assigned" "WIP" "Review-" "Review?" "Review+" "Checkin" "|" "Pushed")
-	(sequence "In Progress" "|" "Published")
-	(sequence "Not Read" "Reading" "|" "Read")))
+        (sequence "Assigned" "WIP" "Review-" "Review?" "Review+" "Checkin" "|" "Pushed")
+        (sequence "In Progress" "|" "Published")
+        (sequence "Not Read" "Reading" "|" "Read")))
 #+END_SRC
 
 ** Capture templates
@@ -495,20 +495,20 @@ The current templates that exists are:
 
 *** TODO Make the code snippets go into the snippet file under the correct heading by default
 
-    My snippets file is organized with the languages as the top level heading. 
+    My snippets file is organized with the languages as the top level heading.
     Currently all new snippets first go into the refile file and later refiled under the
     correct language header. It would be neat to get it in under the correct heading directly.
-    
+
     My guess is that we can use the file+function feature of the template and build a custom
     function that will find the correct headline someway.
-   
+
     Crude first idea is to just prompt the user for a headline and then go to that headline.
 
 ** Refile setup
 
 #+BEGIN_SRC emacs-lisp
 (setq org-refile-targets '((nil :maxlevel . 9)
-			   (org-agenda-files :maxlevel . 9)))
+                           (org-agenda-files :maxlevel . 9)))
 (setq org-refile-use-outline-path t)
 (setq org-refile-allow-creating-parent-nodes (quote confirm))
 (setq org-completion-use-ido t)
@@ -528,12 +528,12 @@ Drill mode is used for spaced repetition learning.
 #+BEGIN_SRC emacs-lisp
 (use-package org-drill
   :config (progn
-	    (add-to-list 'org-modules 'org-drill)
-	    (setq org-drill-add-random-noise-to-intervals-p t)
-	    (setq org-drill-hint-separator "||")
-	    (setq org-drill-left-cloze-delimiter "<[")
-	    (setq org-drill-right-cloze-delimiter "]>")
-	    (setq org-drill-learn-fraction 0.25)))
+            (add-to-list 'org-modules 'org-drill)
+            (setq org-drill-add-random-noise-to-intervals-p t)
+            (setq org-drill-hint-separator "||")
+            (setq org-drill-left-cloze-delimiter "<[")
+            (setq org-drill-right-cloze-delimiter "]>")
+            (setq org-drill-learn-fraction 0.25)))
 #+END_SRC
 
 *** org-preview-latex-fragment fix
@@ -561,7 +561,7 @@ Helm is a nice system for narrowing selections and finding stuff. This section i
 #+BEGIN_SRC emacs-lisp
 (require 'helm-config)
 (helm-autoresize-mode t)
-(setq helm-buffers-fuzzy-matching t 
+(setq helm-buffers-fuzzy-matching t
       helm-recentf-fuzzy-match t
       helm-M-x-fuzzy-match t)
 #+END_SRC
@@ -604,7 +604,7 @@ I am using the notmuch email system to be able to read and search for emails.
                                         :key "i")
                                  (:name "unread"
                                         :query "tag:unread"
-                                        :key "u"   
+                                        :key "u"
                                         :count-query "tag:unread")
                                  (:name "flagged"
                                         :query "tag:flagged"
@@ -631,6 +631,13 @@ I am using the notmuch email system to be able to read and search for emails.
           "https://jeremykun.com/feed/"
           "https://pagefault.se/atom.xml"))
 #+END_SRC
+* Magit
+Set some basic keybindings for magit, historial emacs vc mode is C-x v <command>
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key (kbd "C-x v s") 'magit-status)
+    (global-set-key (kbd "C-x v p") 'magit-pull)
+    (global-set-key (kbd "C-x v c") 'magit-branch-and-checkout)
+  #+END_SRC
 * TODO Configuration tasks [50%]
 ** DONE Complete org-drill configuration
    CLOSED: [2016-05-08 Sun 00:48]
