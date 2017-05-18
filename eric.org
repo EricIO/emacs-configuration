@@ -654,9 +654,12 @@ I am using the notmuch email system to be able to read and search for emails.
 * Magit
 Set some basic keybindings for magit, historial emacs vc mode is C-x v <command>
   #+BEGIN_SRC emacs-lisp
-    (global-set-key (kbd "C-x v s") 'magit-status)
-    (global-set-key (kbd "C-x v p") 'magit-pull)
-    (global-set-key (kbd "C-x v c") 'magit-branch-and-checkout)
+  (global-set-key (kbd "C-c v s") 'magit-status)
+  (global-set-key (kbd "C-c v p") 'magit-pull)
+  (global-set-key (kbd "C-c v b") 'magit-blame)
+  (global-set-key (kbd "C-c v l") 'magit-log)
+  (global-set-key (kbd "C-c v c") 'magit-branch-and-checkout)
+  (global-set-key (kbd "C-c v o") 'magit-checkout)
   #+END_SRC
 * TODO Configuration tasks [50%]
 ** DONE Complete org-drill configuration
