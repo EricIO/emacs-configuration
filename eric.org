@@ -691,11 +691,12 @@ Force the use of pdflatex (will fail if pdflatex is not installed).
 #+END_SRC
 * Magit
 #+BEGIN_SRC emacs-lisp
-  (use-package magit
-    :bind (("C-c v s" . magit-status)
-	   ("C-c v p" . magit-pull)
-	   ("C-c v b" . magit-blame)
-	   ("C-c v l" . magit-log)
-	   ("C-c v c" . magit-branch-and-checkout)
-	   ("C-c v o" . magit-checkout)))
+    (use-package magit
+      :bind (("C-c v b" . magit-blame)
+	     ("C-c v c" . magit-branch-and-checkout)
+	     ("C-c v l" . magit-log)
+	     ("C-c v m" . magit-merge)
+	     ("C-c v o" . magit-checkout)
+	     ("C-c v p" . magit-pull)
+	     ("C-c v s" . magit-status)))
 #+END_SRC
