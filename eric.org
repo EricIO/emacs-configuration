@@ -144,6 +144,19 @@ Next we need to configure which mode we choose for different file endings.
   (add-to-list 'auto-mode-alist '("\\.\\(org\\|org_archive\\|txt\\)$" . org-mode))
 #+END_SRC
 
+** Mac specific
+Set the option key as meta if we are on a mac
+#+BEGIN_SRC emacs-lisp
+  (if (string= system-type "darwin")
+      (progn
+	(setq mac-command-modifier 'meta)
+	(setq mac-option-modifier nil)))
+
+(when (memq window-system '(max ns))
+  (setq exec-path-from-shell-check-startup-files nil)
+  (exec-path-from-shell-initialize)
+(exec-path-from-shell-copy-envs '("PATH")))
+#+END_SRC
 * Basic Configuration
 First of all we don't need to have any disabled commands that emacs doesn't think
 we should use...
@@ -234,34 +247,30 @@ Javascript stuff from mozilla for working with mozilla js source files.
 Enabling eslint over jshint for flycheck.
 
 #+BEGIN_SRC emacs-lisp
-(defun js-mode-hacks ()
-  (setq-local mode-name "JS")
-  ;; Set this locally so that the head.js rule continues to work
-  ;; properly.  In particular for a mochitest we want to preserve the
-  ;; "browser_" prefix.
-  (when (buffer-file-name)
-    (let ((base (file-name-nondirectory (buffer-file-name))))
-      (when (string-match "^\\([a-z]+_\\)" base)
-	(setq-local flycheck-temp-prefix (match-string 1 base))))
-    (let ((base-dir (locate-dominating-file (buffer-file-name)
-					    ".eslintignore")))
-      (when base-dir
-	(let ((eslint (expand-file-name
-		       "tools/lint/eslint/node_modules/.bin/eslint" base-dir)))
-	  (when (file-exists-p eslint)
-	    (setq-local flycheck-javascript-eslint-executable eslint))))))
-  (flycheck-mode 1))
+  (defun js-mode-hacks ()
+    (setq-local mode-name "JS")
+    ;; Set this locally so that the head.js rule continues to work
+    ;; properly.  In particular for a mochitest we want to preserve the
+    ;; "browser_" prefix.
+    (when (buffer-file-name)
+      (let ((base (file-name-nondirectory (buffer-file-name))))
+	(when (string-match "^\\([a-z]+_\\)" base)
+	  (setq-local flycheck-temp-prefix (match-string 1 base))))
+      (let ((base-dir (locate-dominating-file (buffer-file-name)
+					      ".eslintignore")))
+	(when base-dir
+	  (let ((eslint (expand-file-name
+			 "tools/lint/eslint/node_modules/.bin/eslint" base-dir)))
+	    (when (file-exists-p eslint)
+	      (setq-local flycheck-javascript-eslint-executable eslint))))))
+    (flycheck-mode 1))
 
-(setq-default flycheck-disabled-checkers
-	      (append flycheck-disabled-checkers
-		      '(javascript-jshint)))
-
-(add-hook 'js2-mode-hook #'js-mode-hacks)
-(add-hook 'js2-mode-hook
-	  (lambda ()
-	    (setq
-	     js-indent-level 2
-	     indent-tabs-mode nil)))
+  (add-hook 'js2-mode-hook #'js-mode-hacks)
+  (add-hook 'js2-mode-hook
+	    (lambda ()
+	      (setq
+	       js-indent-level 2
+	       indent-tabs-mode nil)))
 #+END_SRC
 ** Whitespace things
 #+BEGIN_SRC emacs-lisp
@@ -304,29 +313,30 @@ Helm is a cool system for completion and file navigation, I use this in conjunct
 project management.
 
 #+BEGIN_SRC emacs-lisp
-    (use-package helm
-      :diminish helm-mode
-      :init
-      (progn
-	(require 'helm-config)
-	(setq helm-candidate-number-limit 100)
-	(setq helm-idle-delay 0.0
-	      helm-input-idle-delay 0.01
-	      helm-buffers-fuzzy-matching t
-	      helm-recentf-fuzzy-match t
-	      helm-M-x-fuzzy-match t
-	      helm-quick-update t
-	      helm-M-x-requires-pattern nil
-	      helm-ff-skip-boring-files t)
-	(helm-mode)
-	(helm-autoresize-mode t))
-      :bind (("C-c h"   . helm-mini)
-	     ("C-h a"   . helm-apropos)
-	     ("C-x C-b" . helm-buffers-list)
-	     ("C-x b"   . helm-buffers-list)
-	     ("C-x c o" . helm-occur)
-	     ("M-y"     . helm-show-kill-ring)
-	     ("M-x"     . helm-M-x)))
+  (use-package helm
+    :diminish helm-mode
+    :init
+    (progn
+      (require 'helm-config)
+      (setq helm-candidate-number-limit 100)
+      (setq helm-idle-delay 0.0
+	    helm-input-idle-delay 0.01
+	    helm-buffers-fuzzy-matching t
+	    helm-recentf-fuzzy-match t
+	    helm-M-x-fuzzy-match t
+	    helm-quick-update t
+	    helm-M-x-requires-pattern nil
+	    helm-ff-skip-boring-files t)
+      (helm-mode)
+      (helm-autoresize-mode t))
+    :bind (("C-c h"   . helm-mini)
+	   ("C-x f"   . helm-for-files)
+	   ("C-h a"   . helm-apropos)
+	   ("C-x C-b" . helm-buffers-list)
+	   ("C-x b"   . helm-buffers-list)
+	   ("C-x c o" . helm-occur)
+	   ("M-y"     . helm-show-kill-ring)
+	   ("M-x"     . helm-M-x)))
 #+END_SRC
 
 Projectile is */the/* system for working with projects in emacs!
