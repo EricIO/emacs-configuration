@@ -223,6 +223,7 @@ exist.
 (global-set-key "\C-xp"         'replace-string)
 (global-set-key (kbd "C-c r")   'comment-region)
 (global-set-key (kbd "C-c u")   'uncomment-region)
+(global-set-key (kbd "C-c s")   'eshell)
 ;; eel related bindings
 (global-set-key (kbd "C-c C-d") 'eel/duplicate-line)
 (global-set-key (kbd "C-c f")   'eel/copy-filename-to-killring)
