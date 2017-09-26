@@ -547,7 +547,11 @@ Different todo states for different work places / bug trackers etc.
 #+END_SRC
 
 ** Agenda
-Custom agenda views
+
+I've started working with TODOs more and more and org-agenda is of course great for customizing.
+Below is a custom agenda command that only shows tasks that have been tagged with my place of work
+so that I can focus on them when I work.
+
 #+BEGIN_SRC emacs-lisp
   (setq org-agenda-custom-commands
 	'(("w" "Work Tasks" tags-todo "expressen"
@@ -618,7 +622,7 @@ The current templates that exists are:
 (setq org-indirect-buffer-display 'current-window)
 
 (defun refile/verify-refile-target ()
-  "Exclude toto keywords with a done state from refile targets"
+  "Exclude todo keywords with a done state from refile targets"
   (not (member (nth 2 (org-heading-components)) org-done-keywords)))
 (setq org-refile-target-verify-function 'refile/verify-refile-target)
 #+END_SRC
@@ -724,6 +728,10 @@ Force the use of pdflatex (will fail if pdflatex is not installed).
 	    "https://www.schneier.com/blog/atom.xml")))
 #+END_SRC
 * Magit
+
+We'll make all our interactions with magit begin with `C-c v`. Need to look into how
+you bind keys for custom aliases.
+
 #+BEGIN_SRC emacs-lisp
     (use-package magit
       :bind (("C-c v b" . magit-blame)
