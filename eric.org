@@ -37,8 +37,8 @@ want to get packages from.
 (package-initialize)
 (setq package-archives
       '(("melpa" . "http://melpa.org/packages/")
-	("org" . "http://orgmode.org/elpa/")
-	("gnu" . "http://elpa.gnu.org/packages/")))
+        ("org" . "http://orgmode.org/elpa/")
+        ("gnu" . "http://elpa.gnu.org/packages/")))
 #+END_SRC
 
 We are now able to require and install the programs that we need.
@@ -77,6 +77,7 @@ just add it att the end of the `my-packages` list.
       switch-window
       undo-tree
       use-package
+      xref-js2
       yasnippet))
 
   (when (not package-archive-contents)
@@ -84,8 +85,8 @@ just add it att the end of the `my-packages` list.
 
   (defun my-packages-installed-p ()
     (loop for p in my-packages
-	  when (not (package-installed-p p)) do (return nil)
-	  finally (return t)))
+          when (not (package-installed-p p)) do (return nil)
+          finally (return t)))
 
   (unless (my-packages-installed-p)
     ;; check for new packages (package versions)
@@ -95,7 +96,7 @@ just add it att the end of the `my-packages` list.
     ;; install the missing packages
     (dolist (p my-packages)
       (when (not (package-installed-p p))
-	(package-install p))))
+        (package-install p))))
 
   (setq use-package-verbose t)
   (require 'use-package)
@@ -139,8 +140,6 @@ Next we need to configure which mode we choose for different file endings.
   (add-to-list 'auto-mode-alist '("\\.pro\\'" . prolog-mode))
   (add-to-list 'auto-mode-alist '("\\.erl\\'" . erlang-mode))
   (add-to-list 'auto-mode-alist '("\\.cl\\'" . common-lisp-mode))
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-  (add-to-list 'auto-mode-alist '("\\.jsm\\'" . js2-mode))
   (add-to-list 'auto-mode-alist '("\\.\\(org\\|org_archive\\|txt\\)$" . org-mode))
 #+END_SRC
 
@@ -148,10 +147,10 @@ Next we need to configure which mode we choose for different file endings.
 Set the option key as meta if we are on a mac
 #+BEGIN_SRC emacs-lisp
     (if (string= system-type "darwin")
-	(progn
-	  (setq mac-command-modifier 'meta)
-	  (setq mac-option-modifier 'meta)
-	  (setq mac-right-option-modifier nil)))
+        (progn
+          (setq mac-command-modifier 'meta)
+          (setq mac-option-modifier 'meta)
+          (setq mac-right-option-modifier nil)))
 
   (when (memq window-system '(max ns))
     (setq exec-path-from-shell-check-startup-files nil)
@@ -178,6 +177,7 @@ I also have a couple configurations for some of the built in stuff, either enabl
 disabling stuff i use or don't use.
 
 #+BEGIN_SRC emacs-lisp
+  (setq-default indent-tabs-mode nil)
   (column-number-mode 1)
   (show-paren-mode 1)
   (setq show-paren-delay 0)
@@ -190,8 +190,8 @@ disabling stuff i use or don't use.
   (global-auto-revert-mode t)
   (nyan-mode t)
   (setq kill-emacs-query-functions
-	(cons (lambda () (yes-or-no-p "Really kill emacs?"))
-	      kill-emacs-query-functions))
+        (cons (lambda () (yes-or-no-p "Really kill emacs?"))
+              kill-emacs-query-functions))
 #+END_SRC
 ** Backups and autosaving
 Emacs usually puts backup files in the same directory as the current buffer.
@@ -245,34 +245,6 @@ Taken from emacsrocks
   (cleanup-buffer))
 #+END_SRC
 
-Javascript stuff from mozilla for working with mozilla js source files.
-Enabling eslint over jshint for flycheck.
-
-#+BEGIN_SRC emacs-lisp
-  (defun js-mode-hacks ()
-    (setq-local mode-name "JS")
-    ;; Set this locally so that the head.js rule continues to work
-    ;; properly.  In particular for a mochitest we want to preserve the
-    ;; "browser_" prefix.
-    (when (buffer-file-name)
-      (let ((base (file-name-nondirectory (buffer-file-name))))
-	(when (string-match "^\\([a-z]+_\\)" base)
-	  (setq-local flycheck-temp-prefix (match-string 1 base))))
-      (let ((base-dir (locate-dominating-file (buffer-file-name)
-					      ".eslintignore")))
-	(when base-dir
-	  (let ((eslint (expand-file-name
-			 "tools/lint/eslint/node_modules/.bin/eslint" base-dir)))
-	    (when (file-exists-p eslint)
-	      (setq-local flycheck-javascript-eslint-executable eslint))))))
-    (flycheck-mode 1))
-
-  (add-hook 'js2-mode-hook #'js-mode-hacks)
-  (add-hook 'js2-mode-hook
-	    (lambda ()
-	      (setq
-	       js-indent-level 2
-	       indent-tabs-mode nil)))
 #+END_SRC
 ** Whitespace things
 #+BEGIN_SRC emacs-lisp
@@ -322,23 +294,23 @@ project management.
       (require 'helm-config)
       (setq helm-candidate-number-limit 100)
       (setq helm-idle-delay 0.0
-	    helm-input-idle-delay 0.01
-	    helm-buffers-fuzzy-matching t
-	    helm-recentf-fuzzy-match t
-	    helm-M-x-fuzzy-match t
-	    helm-quick-update t
-	    helm-M-x-requires-pattern nil
-	    helm-ff-skip-boring-files t)
+            helm-input-idle-delay 0.01
+            helm-buffers-fuzzy-matching t
+            helm-recentf-fuzzy-match t
+            helm-M-x-fuzzy-match t
+            helm-quick-update t
+            helm-M-x-requires-pattern nil
+            helm-ff-skip-boring-files t)
       (helm-mode)
       (helm-autoresize-mode t))
     :bind (("C-c h"   . helm-mini)
-	   ("C-x f"   . helm-for-files)
-	   ("C-h a"   . helm-apropos)
-	   ("C-x C-b" . helm-buffers-list)
-	   ("C-x b"   . helm-buffers-list)
-	   ("C-x c o" . helm-occur)
-	   ("M-y"     . helm-show-kill-ring)
-	   ("M-x"     . helm-M-x)))
+           ("C-x f"   . helm-for-files)
+           ("C-h a"   . helm-apropos)
+           ("C-x C-b" . helm-buffers-list)
+           ("C-x b"   . helm-buffers-list)
+           ("C-x c o" . helm-occur)
+           ("M-y"     . helm-show-kill-ring)
+           ("M-x"     . helm-M-x)))
 #+END_SRC
 
 Projectile is */the/* system for working with projects in emacs!
@@ -365,9 +337,9 @@ We want to configure it to use helm because awesome + awesome = more awesomeness
 #+BEGIN_SRC emacs-lisp
   (use-package multiple-cursors
     :bind (("C-. l" . mc/edit-lines)
-	   ("C-. a" . mc/mark-all-like-this)
-	   ("M-n"   . mc/mark-next-like-this)
-	   ("M-p"   . mc/mark-previous-like-this)))
+           ("C-. a" . mc/mark-all-like-this)
+           ("M-n"   . mc/mark-next-like-this)
+           ("M-p"   . mc/mark-previous-like-this)))
 #+END_SRC
 ** Expand region
 #+BEGIN_SRC emacs-lisp
@@ -380,8 +352,8 @@ Avy allows us to quickly jump in our buffers
 #+BEGIN_SRC emacs-lisp
   (use-package avy
     :bind (("M-g j" . avy-goto-char)
-	   ("M-g w" . avy-goto-word-1)
-	   ("M-g l" . avy-goto-line))
+           ("M-g w" . avy-goto-word-1)
+           ("M-g l" . avy-goto-line))
     :config
     (avy-setup-default))
 #+END_SRC
@@ -390,7 +362,7 @@ Let's also use avy for zapping to chars!
 #+BEGIN_SRC emacs-lisp
   (use-package avy-zap
     :bind (("M-z" . avy-zap-up-to-char-dwim)
-	   ("M-Z" . avy-zpa-to-char-dwim)))
+           ("M-Z" . avy-zpa-to-char-dwim)))
 #+END_SRC
 ** Switching window
 #+BEGIN_SRC emacs-lisp
@@ -435,8 +407,8 @@ We use rust mode and the cargo minor mode. There is also the rustfmt package
 #+BEGIN_SRC emacs-lisp
   (add-hook 'rust-mode-hook 'cargo-minor-mode)
   (add-hook 'rust-mode-hook (lambda ()
-			      (local-set-key
-			       (kbd "C-c <tab>" #'rust-format-buffer))))
+                              (local-set-key
+                               (kbd "C-c <tab>" #'rust-format-buffer))))
 #+END_SRC
 
 Racer is the code completion and source code navigation tool for rust.
@@ -455,9 +427,71 @@ We can use it to get nice code completion with company-mode.
 Enable company-go as the backend for company-mode
 #+BEGIN_SRC emacs-lisp
   (add-hook 'go-mode-hook
-	    (lambda ()
-	      (set (make-local-variable 'company-backends) '(company-go))
-	      (company-mode)))
+            (lambda ()
+              (set (make-local-variable 'company-backends) '(company-go))
+              (company-mode)))
+#+END_SRC
+** Javascript
+#+BEGIN_SRC emacs-lisp
+  (use-package js2-mode
+           :init
+           (add-hook 'js2-mode-hook #'js2-refactor-mode)
+           (add-hook 'js2-mode-hook (lambda ()
+                                      (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+           (js2r-add-keybindings-with-prefix "C-c C-r")
+           :bind (
+                  :map js2-mode-map
+                       ("C-k" . js2r-kill)))
+  (require 'xref-js2)
+
+  (define-key js-mode-map (kbd "M-.") nil)
+#+END_SRC
+We'll be using js2 mode since it is superior to javascript-mode.
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+  (add-to-list 'auto-mode-alist '("\\.jsm\\'" . js2-mode))
+#+END_SRC
+
+
+Javascript stuff from mozilla for working with mozilla js source files.
+Enabling eslint over jshint for flycheck.
+
+#+BEGIN_SRC emacs-lisp
+  (defun js-mode-hacks ()
+    (setq-local mode-name "JS")
+    ;; Set this locally so that the head.js rule continues to work
+    ;; properly.  In particular for a mochitest we want to preserve the
+    ;; "browser_" prefix.
+    (when (buffer-file-name)
+      (let ((base (file-name-nondirectory (buffer-file-name))))
+        (when (string-match "^\\([a-z]+_\\)" base)
+          (setq-local flycheck-temp-prefix (match-string 1 base))))
+      (let ((base-dir (locate-dominating-file (buffer-file-name)
+                                              ".eslintignore")))
+        (when base-dir
+          (let ((eslint (expand-file-name
+                         "tools/lint/eslint/node_modules/.bin/eslint" base-dir)))
+            (when (file-exists-p eslint)
+              (setq-local flycheck-javascript-eslint-executable eslint))))))
+    (flycheck-mode 1))
+
+  (add-hook 'js2-mode-hook #'js-mode-hacks)
+  (add-hook 'js2-mode-hook
+            (lambda ()
+              (setq
+               js-indent-level 2
+               indent-tabs-mode nil)))
+** Web-mode
+#+BEGIN_SRC emacs-lisp
+  (use-package web-mode
+    :init (add-hook 'web-mode-hook
+                    (lambda ()
+                      (setq web-mode-markup-indent-offset 2)
+                      (setq web-mode-css-indent-offset 2)
+                      (setq web-mode-code-indent-offset 2))))
+
+  (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.styl\\'" .web-mode))
 #+END_SRC
 * Org-mode configuration
 
@@ -519,9 +553,9 @@ Agenda files is all files in the tasks directory
 
 #+BEGIN_SRC emacs-lisp
   (setq org-agenda-files '("~/.emacs.d/org/tasks"
-			   "~/.emacs.d/org/drill"
-			   "~/.emacs.d/org/notes/notes.org"
-			   "~/.emacs.d/org/refile.org"))
+                           "~/.emacs.d/org/drill"
+                           "~/.emacs.d/org/notes/notes.org"
+                           "~/.emacs.d/org/refile.org"))
 #+END_SRC
 
 ** Tasks and States
@@ -541,9 +575,9 @@ Different todo states for different work places / bug trackers etc.
 #+BEGIN_SRC emacs-lisp
 (setq org-todo-keywords
       '((sequence "TODO(t)" "|" "DONE(d)")
-	(sequence "Assigned" "WIP" "Review-" "Review?" "Review+" "Checkin" "|" "Pushed")
-	(sequence "In Progress" "|" "Published")
-	(sequence "Not Read" "Reading" "|" "Read")))
+        (sequence "Assigned" "WIP" "Review-" "Review?" "Review+" "Checkin" "|" "Pushed")
+        (sequence "In Progress" "|" "Published")
+        (sequence "Not Read" "Reading" "|" "Read")))
 #+END_SRC
 
 ** Agenda
@@ -554,8 +588,8 @@ so that I can focus on them when I work.
 
 #+BEGIN_SRC emacs-lisp
   (setq org-agenda-custom-commands
-	'(("w" "Work Tasks" tags-todo "expressen"
-	   ((org-agenda-files '("~/.emacs.d/org/tasks/work.org" "~/.emacs.d/org/tasks/refile.org"))))))
+        '(("w" "Work Tasks" tags-todo "expressen"
+           ((org-agenda-files '("~/.emacs.d/org/tasks/work.org" "~/.emacs.d/org/tasks/refile.org"))))))
 #+END_SRC
 ** Capture templates
 
@@ -575,27 +609,27 @@ The current templates that exists are:
 
 #+BEGIN_SRC emacs-lisp
   (setq org-capture-templates
-	(quote (("t"
-		 "todo"
-		 entry
-		 (file "~/.emacs.d/org/tasks/refile.org")
-		 "* TODO %? %^g\n%U\n%a\n"
-		 :clock-in t
-		 :clock-resume t)
-		("j"
-		 "Journal"
-		 entry
-		 (file+datetree "~/.emacs.d/org/notes/journal.org")
-		 "* %?\n%U\n"
-		 :clock-in t
-		 :clock-resume t)
-		("c"
-		 "Code Snippet"
-		 entry
-		 (file "~/.emacs.d/org/snippets.org")
-		 "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
-		 :clock-in t
-		 :clock-resume t))))
+        (quote (("t"
+                 "todo"
+                 entry
+                 (file "~/.emacs.d/org/tasks/refile.org")
+                 "* TODO %? %^g\n%U\n%a\n"
+                 :clock-in t
+                 :clock-resume t)
+                ("j"
+                 "Journal"
+                 entry
+                 (file+datetree "~/.emacs.d/org/notes/journal.org")
+                 "* %?\n%U\n"
+                 :clock-in t
+                 :clock-resume t)
+                ("c"
+                 "Code Snippet"
+                 entry
+                 (file "~/.emacs.d/org/snippets.org")
+                 "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
+                 :clock-in t
+                 :clock-resume t))))
 #+END_SRC
 
 *** TODO Make the code snippets go into the snippet file under the correct heading by default
@@ -613,7 +647,7 @@ The current templates that exists are:
 
 #+BEGIN_SRC emacs-lisp
 (setq org-refile-targets '((nil :maxlevel . 9)
-			   (org-agenda-files :maxlevel . 9)))
+                           (org-agenda-files :maxlevel . 9)))
 (setq org-refile-use-outline-path t)
 (setq org-refile-allow-creating-parent-nodes (quote confirm))
 (setq org-completion-use-ido t)
@@ -633,12 +667,12 @@ Drill mode is used for spaced repetition learning.
 #+BEGIN_SRC emacs-lisp
 (use-package org-drill
   :config (progn
-	    (add-to-list 'org-modules 'org-drill)
-	    (setq org-drill-add-random-noise-to-intervals-p t)
-	    (setq org-drill-hint-separator "||")
-	    (setq org-drill-left-cloze-delimiter "<[")
-	    (setq org-drill-right-cloze-delimiter "]>")
-	    (setq org-drill-learn-fraction 0.25)))
+            (add-to-list 'org-modules 'org-drill)
+            (setq org-drill-add-random-noise-to-intervals-p t)
+            (setq org-drill-hint-separator "||")
+            (setq org-drill-left-cloze-delimiter "<[")
+            (setq org-drill-right-cloze-delimiter "]>")
+            (setq org-drill-learn-fraction 0.25)))
 #+END_SRC
 
 *** org-preview-latex-fragment fix
@@ -671,48 +705,48 @@ Force the use of pdflatex (will fail if pdflatex is not installed).
       (setq message-kill-buffer-on-exit t)
       (setq mail-specify-envelope-from t)
       (setq sendmail-program "/usr/bin/msmtp"
-	    mail-specify-envelope-from t
-	    mail-envelope-from 'header
-	    message-sendmail-envelope-from 'header)
+            mail-specify-envelope-from t
+            mail-envelope-from 'header
+            message-sendmail-envelope-from 'header)
       (setq notmuch-crypto-process-mime t))
     :config
     (setq notmuch-saved-searches
-	  '((:name "inbox"
-		   :query "tag:inbox"
-		   :count-query "tag:inbox and tag:unread"
-		   :key "i")
-	    (:name "unread"
-		   :query "tag:unread"
-		   :key "u"
-		   :count-query "tag:unread")
-	    (:name "flagged"
-		   :query "tag:flagged"
-		   :key "f"
-		   :count-query "tag:flagged and tag:unread")
-	    (:name "drafts"
-		   :query "tag:draft"
-		   :count-query "tag:draft"
-		   :key "d")
-	    (:name "all mail"
-		   :query "*"
-		   :count-query "*"
-		   :key "a")
-	    (:name "emacs-devel-unread"
-		   :query "tag:lists and +emacs-devel and tag:unread"
-		   :count-query "tag:lists and +emacs-devel and tag:unread"
-		   :key "em")
-	    (:name "emacs-bugs"
-		   :query "tag:lists/bug-gnu-emacs and tag:unread"
-		   :count-query "tag:lists/bug-gnu-emacs and tag:unread"
-		   :key "eb")
-	    (:name "erlang-questions"
-		   :query "tag:lists/erlang-questions and tag:unread"
-		   :count-query "tag:lists/erlang-questions and tag:unread"
-		   :key "erl")
-	    (:name "foss-sthlm"
-		   :query "tag:lists/lists/foss-sthlm and tag:unread"
-		   :count-query "tag:lists/lists/foss-sthlm and tag:unread"
-		   :key "fs"))))
+          '((:name "inbox"
+                   :query "tag:inbox"
+                   :count-query "tag:inbox and tag:unread"
+                   :key "i")
+            (:name "unread"
+                   :query "tag:unread"
+                   :key "u"
+                   :count-query "tag:unread")
+            (:name "flagged"
+                   :query "tag:flagged"
+                   :key "f"
+                   :count-query "tag:flagged and tag:unread")
+            (:name "drafts"
+                   :query "tag:draft"
+                   :count-query "tag:draft"
+                   :key "d")
+            (:name "all mail"
+                   :query "*"
+                   :count-query "*"
+                   :key "a")
+            (:name "emacs-devel-unread"
+                   :query "tag:lists and +emacs-devel and tag:unread"
+                   :count-query "tag:lists and +emacs-devel and tag:unread"
+                   :key "em")
+            (:name "emacs-bugs"
+                   :query "tag:lists/bug-gnu-emacs and tag:unread"
+                   :count-query "tag:lists/bug-gnu-emacs and tag:unread"
+                   :key "eb")
+            (:name "erlang-questions"
+                   :query "tag:lists/erlang-questions and tag:unread"
+                   :count-query "tag:lists/erlang-questions and tag:unread"
+                   :key "erl")
+            (:name "foss-sthlm"
+                   :query "tag:lists/lists/foss-sthlm and tag:unread"
+                   :count-query "tag:lists/lists/foss-sthlm and tag:unread"
+                   :key "fs"))))
 #+END_SRC
 * Elfeed
 #+BEGIN_SRC emacs-lisp
@@ -720,12 +754,12 @@ Force the use of pdflatex (will fail if pdflatex is not installed).
     :bind (("C-x w" . elfeed))
     :config
     (setq elfeed-feeds
-	  '("http://nullprogram.com/feed/"
-	    "http://www.tedunangst.com/flak/rss"
-	    "https://jeremykun.com/feed/"
-	    "https://pagefault.se/atom.xml"
-	    "https://krebsonsecurity.com/feed/"
-	    "https://www.schneier.com/blog/atom.xml")))
+          '("http://nullprogram.com/feed/"
+            "http://www.tedunangst.com/flak/rss"
+            "https://jeremykun.com/feed/"
+            "https://pagefault.se/atom.xml"
+            "https://krebsonsecurity.com/feed/"
+            "https://www.schneier.com/blog/atom.xml")))
 #+END_SRC
 * Magit
 
@@ -735,10 +769,10 @@ you bind keys for custom aliases.
 #+BEGIN_SRC emacs-lisp
     (use-package magit
       :bind (("C-c v b" . magit-blame)
-	     ("C-c v c" . magit-branch-and-checkout)
-	     ("C-c v l" . magit-log)
-	     ("C-c v m" . magit-merge)
-	     ("C-c v o" . magit-checkout)
-	     ("C-c v p" . magit-pull)
-	     ("C-c v s" . magit-status)))
+             ("C-c v c" . magit-branch-and-checkout)
+             ("C-c v l" . magit-log)
+             ("C-c v m" . magit-merge)
+             ("C-c v o" . magit-checkout)
+             ("C-c v p" . magit-pull)
+             ("C-c v s" . magit-status)))
 #+END_SRC
