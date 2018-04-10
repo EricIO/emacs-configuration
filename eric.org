@@ -481,6 +481,7 @@ Enabling eslint over jshint for flycheck.
               (setq
                js-indent-level 2
                indent-tabs-mode nil)))
+#+END_SRC
 ** Web-mode
 #+BEGIN_SRC emacs-lisp
   (use-package web-mode
