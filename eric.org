@@ -1,779 +1,1032 @@
 #+TITLE: Eric Skoglunds Emacs Configuration
 #+OPTIONS: toc:1 h:4
+#+STARTUP: showeverything
 
 Inspired by:
   - [[https://github.com/mm--/dot-emacs/blob/master/jmm-emacs.org][Josh Moller-Mara's configuration]]
   - [[https://github.com/sachac/.emacs.d/][Sacha Chuas configuration]]
   - [[https://github.com/dakrone/eos][The Emacs Operating system]]
 
-* Emacs initialization
-** Visual distractions
+I decided it was time for another half rewrite of my configuration.
+Instead of the init.el file doing the tangle this will now just be handled with =M-x org-babel-tangle= and just symlinked to =~/.emacs.d/init.el=.
 
-I don't want to see any startup messages or the splash screen.
-I also want to remove the scroll, menu and tool bars.
-#+BEGIN_SRC emacs-lisp
-(setq inhibit-splash-screen t)
-(setq inhibit-startup-message t)
-(scroll-bar-mode -1)
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-#+END_SRC
-** Packages and Elisp management
-*** Load path setup
+* Configuration
+  :PROPERTIES:
+  :CUSTOM_ID: babel-init
+  :END:
 
-All the directories where we look for packages sources and other elisp files
-#+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path "~/emacs.d/elpa")
-(add-to-list 'load-path "~/.emacs.d/themes")
-(add-to-list 'load-path "~/.emacs.d/elisp")
-#+END_SRC
+<<babel-init>>
 
-*** Package setup
-We need to require the package library first and then initialize it so that we can
-load and install the packages we want. After that we setup the repositories that we
-want to get packages from.
-#+BEGIN_SRC emacs-lisp
-(require 'package)
-(package-initialize)
-(setq package-archives
-      '(("melpa" . "http://melpa.org/packages/")
-        ("org" . "http://orgmode.org/elpa/")
-        ("gnu" . "http://elpa.gnu.org/packages/")))
-#+END_SRC
+** Start up the environment!
+*** Distractions
+    I'm generally a fan of less menus and thingamabobs around when I'm programming or writing.
+    This means that I like to disable all menus and scroll bars etc. Putting this up top means that
+    they get out of my way as soon as possible.
 
-We are now able to require and install the programs that we need.
-First we need to check that all the packages that we want to use are
-installed and if they aren't we need to install them. To add a package
-just add it att the end of the `my-packages` list.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (setq inhibit-splash-screen t)
+      (setq inhibit-startup-message t)
 
-#+BEGIN_SRC emacs-lisp
-  (require 'cl)
-  (defvar my-packages
-    '(ag
-      async
-      avy
-      cargo
-      company
-      company-go
-      diminish
-      elfeed
-      expand-region
-      flycheck
-      flycheck-rust
-      helm
-      helm-ag
-      helm-projectile
-      magit
-      multiple-cursors
-      nyan-mode
-      org-plus-contrib
-      paredit
-      projectile
-      racer
-      rust-mode
-      smart-mode-line
-      solarized-theme
-      spacemacs-theme
-      switch-window
-      undo-tree
-      use-package
-      xref-js2
-      yasnippet))
+      (scroll-bar-mode -1)
+      (menu-bar-mode -1)
+      (tool-bar-mode -1)
+    #+END_SRC
 
-  (when (not package-archive-contents)
-    (package-refresh-contents))
+    I don't like the blinking cursor. Kill it.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+    (blink-cursor-mode 0)
+    #+END_SRC
 
-  (defun my-packages-installed-p ()
-    (loop for p in my-packages
-          when (not (package-installed-p p)) do (return nil)
-          finally (return t)))
+    Emacs want's us, for some reason, to always enter =yes= or =no= instead of =y= or =n=,
+    let's change that.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (fset 'yes-or-no-p 'y-or-n-p)
+    #+END_SRC
 
-  (unless (my-packages-installed-p)
-    ;; check for new packages (package versions)
-    (message "Refreshing Package Contents")
-    (package-refresh-contents)
-    (message "Installing missing packages")
-    ;; install the missing packages
-    (dolist (p my-packages)
-      (when (not (package-installed-p p))
-        (package-install p))))
+    In the same vain of emacs not doing what we want we don't want to have any disabled commands.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (setq disabled-command-function nil)
+    #+END_SRC
 
-  (setq use-package-verbose t)
-  (require 'use-package)
-  (use-package auto-compile
-    :ensure t
-    :config (auto-compile-on-load-mode))
-  (setq load-prefer-newer t)
-#+END_SRC
+    For when I actually don't want to kill emacs.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+	(setq kill-emacs-query-functions
+	      (cons (lambda () (y-or-n-p "Really kill emacs?"))
+		    kill-emacs-query-functions))
+    #+END_SRC
+  *** Load Path
+    Now is also a good time to setup some load path stuff.
 
-** Require packages
-One unified place to require most of the packages that we use.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (add-to-list 'load-path "~/.emacs.d/elpa")
+      (add-to-list 'load-path "~/.emacs.d/themes")
+      (add-to-list 'load-path "~/.emacs.d/elisp")
 
-#+BEGIN_SRC emacs-lisp
-(require 'org)
-(require 'org-drill)
-#+END_SRC
+      (define-inline emacs-path (path)
+	(expand-file-name path user-emacs-directory))
+    #+END_SRC
 
-We also want to require some files that I've created myself, let's do that seperatly for ease of maintenance.
+*** Package
+    With that out of the way we can setup package in order to get the packages we need installed!
 
-#+BEGIN_SRC emacs-lisp
-(require 'eel)
-#+END_SRC
+    First we'll setup =package.el=.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (require 'package)
+      (package-initialize)
 
-** Color theme
-We can now load our color theme!
-#+BEGIN_SRC emacs-lisp
-(load-theme 'spacemacs-dark t)
-#+END_SRC
+      (setq package-archives
+	    '(("melpa" . "http://melpa.org/packages/")
+	      ("org"   . "http://orgmode.org/elpa/")
+	      ("gnu"   . "http://elpa.gnu.org/packages/")))
 
-*** Source file modes configuration
-Configure what modes files will be open in. Our default mode is /not/ *fundamental*
-but *org-mode* since everything should really just be org files!
+      (when (not package-archive-contents)
+	(package-refresh-contents))
+    #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-(setq-default major-mode 'org-mode)
+
+**** use-package
+     Next we're going to be installing =use-package= to help us install and configure out packages.
+
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (unless (package-installed-p 'use-package)
+	 (package-install 'use-package))
+
+       (setq use-package-always-ensure t)
+       (require 'use-package)
+
+       (use-package auto-compile
+	 :config (auto-compile-on-load-mode))
+       (setq load-prefer-newer t)
+     #+END_SRC
+
+     #+BEGIN_SRC emacs-lisp :tangle yes
+     (use-package diminish :demand t)
+     #+END_SRC
+Great now we're ready to get our packages up and running so we can start using our favorite editor!
+
+*** Server
+    Starting an emacs server allow us to set the =$EDITOR= variable to =emacsclient=
+    which will open the current gui emacs instead of a whole new -nw emacs.
+
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package server
+	:unless noninteractive
+	:no-require
+	:hook (after-init . server-start))
+    #+END_SRC
+** Basic Configuration
+*** Color Theme!
+    For the moment I use the spacemacs-dark theme so let's load it up!
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (load-theme 'spacemacs-dark t)
+      (global-font-lock-mode t)
+    #+END_SRC
+
+*** Fringe and line
+Let's use the native line numbering from emacs 26!
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (display-line-numbers-mode t)
 #+END_SRC
 
-Next we need to configure which mode we choose for different file endings.
-
-#+BEGIN_SRC emacs-lisp
-  (add-to-list 'auto-mode-alist '("\\.pro\\'" . prolog-mode))
-  (add-to-list 'auto-mode-alist '("\\.erl\\'" . erlang-mode))
-  (add-to-list 'auto-mode-alist '("\\.cl\\'" . common-lisp-mode))
-  (add-to-list 'auto-mode-alist '("\\.\\(org\\|org_archive\\|txt\\)$" . org-mode))
-#+END_SRC
-
-** Mac specific
-Set the option key as meta if we are on a mac
-#+BEGIN_SRC emacs-lisp
-    (if (string= system-type "darwin")
-        (progn
-          (setq mac-command-modifier 'meta)
-          (setq mac-option-modifier 'meta)
-          (setq mac-right-option-modifier nil)))
-
-  (when (memq window-system '(max ns))
-    (setq exec-path-from-shell-check-startup-files nil)
-    (exec-path-from-shell-initialize)
-  (exec-path-from-shell-copy-envs '("PATH")))
-#+END_SRC
-* Basic Configuration
-First of all we don't need to have any disabled commands that emacs doesn't think
-we should use...
-
-And we really don't want to be typing `yes` or `no` all the time but want to use `y` and `n`.
-
-#+BEGIN_SRC emacs-lisp
-(setq disabled-command-function nil)
-(fset 'yes-or-no-p 'y-or-n-p)
-#+END_SRC
-
-I *hate* blinking cursors so that needs to go!
-#+BEGIN_SRC emacs-lisp
-(blink-cursor-mode 0)
-#+END_SRC
-
-I also have a couple configurations for some of the built in stuff, either enabling or
-disabling stuff i use or don't use.
-
-#+BEGIN_SRC emacs-lisp
-  (setq-default indent-tabs-mode nil)
+I like visual-line mode so let's use that
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (global-visual-line-mode t)
+  (global-hl-line-mode t)
   (column-number-mode 1)
-  (show-paren-mode 1)
-  (setq show-paren-delay 0)
-  (global-visual-line-mode 1)
-  (global-linum-mode 1)
-  (column-number-mode t)
-  (electric-pair-mode t)
-  (electric-indent-mode t)
-  (global-font-lock-mode t)
-  (global-auto-revert-mode t)
-  (nyan-mode t)
-  (setq kill-emacs-query-functions
-        (cons (lambda () (yes-or-no-p "Really kill emacs?"))
-              kill-emacs-query-functions))
 #+END_SRC
-** Backups and autosaving
-Emacs usually puts backup files in the same directory as the current buffer.
-I like to have them colected into one directory in my .emacs.d directory.
+*** OS Specific
 
-#+BEGIN_SRC emacs-lisp
-(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+**** Mac OSX
+     I switch some of the keys in os x just since stuff brakes. I also had some path issues fixed here.
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (if (string= system-type "darwin")
+	   (progn
+	     (setq mac-command-modifier 'meta)
+	     (setq mac-option-modifier 'meta)
+	     (setq mac-right-option-modifier nil)))
+
+       (when (memq window-system '(max ns))
+	 (setq exec-path-from-shell-check-startup-files nil)
+	 (exec-path-from-shell-initialize)
+	 (exec-path-from-shell-copy-envs '("PATH")))
+
+     #+END_SRC
+*** Backups
+    Emacs is really good with having your things backed up, unfortunatly is puts stuff in the
+    current directory cluttering up everything. Let's put those in =~/.emacs.d/backups= and
+    auto-saves in =~/.emacs.d/auto-save-list=. We also just keep everything since we have a lot
+    of space and we have some hoarding tendencies.
+
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (setq backup-directory-alist '((".*" . "~/.emacs.d/backups")))
+
+      (setq delete-old-versions -1)
+      (setq version-control t)
+      (setq vc-make-backup-files t)
+      (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list" t)))
+    #+END_SRC
+*** General Editing
+    Some bits and bob
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (show-paren-mode t)
+      (setq show-paren-delay 0)
+      (electric-pair-mode t)
+      (setq indent-tabs-mode nil)
+    #+END_SRC
+
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (global-auto-revert-mode t)
+    #+END_SRC
+
+    Let's make sure that we cleanup whitespace.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (add-hook 'before-save-hook 'whitespace-cleanup)'
+    #+END_SRC
+**** Multiple cursors and expand-region
+     Magnars excellent stuff is a must have!
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (use-package expand-region
+	 :bind ("C--" . er/expand-region))
+     #+END_SRC
+
+     Before we setup multiple cursos let's setup the selected package which provides
+     a keymap for when the region is active.
+
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (use-package selected
+	 :diminish selected-minor-mode
+	 :bind (:map selected-keymap
+		     ("q" . selected-off)
+		     ("u" . upcase-region)
+		     ("d" . downcase-region)
+		     ("w" . count-words-region))
+	 :config
+	 (selected-global-mode 1))
+     #+END_SRC
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (use-package multiple-cursors
+	 :bind (("C-c m a" . mc/edit-beginnings-of-lines)
+		("C-c m e" . mc/edit-ends-of-lines)
+		("C-c m W" . mc/mark-all-words-like-this)
+		("C-c m S" . mc/mark-all-symbols-like-this)
+		("C-c m n" . mc/mark-next-like-this))
+	 :bind (:map selected-keymap
+		     ("e"   . mc/edit-lines)
+		     ("n"   . mc/mark-next-like-this)
+		     ("<"   . mc/unmark-next-like-this)
+		     ("C->" . mc/skip-to-next-like-this)
+		     ("p"   . mc/mark-previous-like-this)
+		     (">"   . mc/unmark-previous-like-this)
+		     ("C-<" . mc/skip-to-previous-like-this)
+		     ("s"   . mc/mark-next-symbol-like-this)
+		     ("S"   . mc/mark-previous-symbol-like-this)
+		     ("w"   . mc/mark-next-word-like-this)
+		     ("W"   . mc/mark-previous-word-like-this)))
+     #+END_SRC
+**** Undoing
+     Undo tree let's us visually see what we are undoing in a nicer way.
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (use-package undo-tree
+	 :diminish undo-tree-mode
+	 :config
+	 (progn
+	   (global-undo-tree-mode)
+	   (setq undo-tree-visualizer-timestamps t)
+	   (setq undo-tree-visualizer-diff t)))
+     #+END_SRC
+**** General keymappings
+     Set some general keymappings up.
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (global-set-key (kbd "C-x p") 'replace-string)
+       (global-set-key (kbd "C-c r") 'comment-region)
+       (global-set-key (kbd "C-c u") 'uncomment-region)
+       (global-set-key (kbd "C-c s") 'eshell)
+     #+END_SRC
+
+** Autocomplete and snippets
+*** Autocomplete
+    For autocomplete I've been using company mode for a while and like it a lot.
+    The =ora-company-number= comes from [[http://oremacs.com/2017/12/27/company-numbers/][oremacs]].
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package company
+	:diminish
+	:commands (company-mode)
+	:config
+	(defun ora-company-number ()
+	  "Forward to `company-complete-number'.
+	Unless the number is potentially part of the candidate.
+	In that case, insert the number."
+	  (interactive)
+	  (let* ((k (this-command-keys))
+		 (re (concat "^" company-prefix k)))
+	    (if (cl-find-if (lambda (s) (string-match re s))
+			    company-candidates)
+		(self-insert-command 1)
+	      (company-complete-number (string-to-number k)))))
+
+	(let ((map company-active-map))
+	  (mapc
+	   (lambda (x)
+	     (define-key map (format "%d" x) 'ora-company-number))
+	   (number-sequence 0 9))
+	  (define-key map " " (lambda ()
+				(interactive)
+				(company-abort)
+				(self-insert-command 1))))
+	(global-company-mode 1))
+    #+END_SRC
+*** Snippets
+    Again for me there is no other than yasnippet!
+
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package yasnippet
+	:after prog-mode
+	:diminish yas-minor-mode
+	:init (yas-global-mode)
+	:bind (("C-c y d" . yas-load-directory)
+	       ("C-c y i" . yas-insert-snippet)
+	       ("C-c y f" . yas-visit-snippet-file)
+	       ("C-c y n" . yas-new-snippet)
+	       ("C-c y t" . yas-tryout-snippet)
+	       ("C-c y g" . yas/global-mode)
+	       ("C-c y r" . yas-reload-all))
+	:mode ("/\\.emacs\\.d/snippets/" . snippet-mode)
+	:config
+	(yas-load-directory (emacs-path "snippets"))
+	(yas-global-mode 1))
+    #+END_SRC
+*** Flycheck
+    Finally we install flycheck for on the fly error checking.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package flycheck
+	:init (global-flycheck-mode))
+    #+END_SRC
+** Helm
+   Helm gives super nice completion and narrowing with fuzzy search.
+
+   #+BEGIN_SRC emacs-lisp :tangle yes
+     (use-package helm
+       :diminish helm-mode
+       :init
+       (progn
+	 (require 'helm-config)
+	 (setq helm-candidate-number-limit 100
+	       helm-idle-delay 0.0
+	       helm-input-idle-delay 0.01
+	       helm-quick-update t
+	       helm-ff-skip-boring-files t
+	       helm-M-x-requires-pattern nil)
+	 (helm-mode))
+       :bind (("C-c h"   . helm-mini)
+	      ("C-h a"   . helm-apropos)
+	      ("C-x C-b" . helm-buffer-list)
+	      ("C-x b"   . helm-buffer-list)
+	      ("M-y"     . helm-show-kill-ring)
+	      ("M-x"     . helm-M-x)
+	      ("C-x c o" . helm-occur)
+	      ("C-x c s" . helm-swoop)
+	      ("C-x c y" . helm-yas-complete)
+	      ("C-x c Y" . helm-yas-create-snippet-on-region)))
+
+     (ido-mode -1)
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp :tangle yes
+     (use-package helm-swoop
+       :bind (("C-S-s" . helm-swoop)))
+   #+END_SRC
+** Projectile
+   Projectile is a great package for finding your way around in projects.
+   #+BEGIN_SRC emacs-lisp :tangle yes
+     (use-package projectile
+       :diminish projectile-mode
+       :config
+       (progn
+	 (setq projectile-keymap-prefix (kbd "C-c p")
+	       projectile-completion-system 'default
+	       projectile-enable-caching t
+	       projectile-files-cache-expire 3600 ;; Let's see if this works well
+	       projectile-indexing-method 'alien)
+	 (add-to-list 'projectile-globally-ignored-directories "node-modules"))
+       (projectile-global-mode))
+
+     (use-package helm-projectile)
+   #+END_SRC
+** Moving around
+*** Avy mode
+    Avy mode allows me to jump around a bit more efficiently.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package avy
+	:bind (("C-c j c" . avy-goto-char-timer)
+	       ("C-c j s" . avy-goto-char)
+	       ("C-c j w" . avy-goto-word-1)
+	       ("C-c j l" . avy-goto-line))
+	:config
+	(avy-setup-default))
+    #+END_SRC
+*** Switching windows
+    I used to use the =switch-window= package but I'm currently trying out =ace-window=.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package ace-window
+	:bind (("M-o" . ace-window))
+	:config
+	(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+    #+END_SRC
+** Programming Languages
+*** LISP
+    Paredit paredit paredit.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package paredit
+	:config
+	(progn
+	  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+	  (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+	  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+	  (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+	  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+	  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)))
 #+END_SRC
-
-We save all, save version controlled. We have terrabytes of storage and don't want
-to lose anything ever!
-
-#+BEGIN_SRC emacs-lisp
-(setq delete-old-versions -1)
-(setq version-control t)
-(setq vc-make-backup-files t)
-(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+**** Emacs lisp
+     Let's use eldoc for all that sweet elisp documentation.
+     #+BEGIN_SRC emacs-lisp
+       (use-package "eldoc"
+	 :diminish eldoc-mode
+	 :commands turn-on-eldoc-mode
+	 :defer t
+	 :init
+	 (progn
+	   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+	   (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
+	   (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)
+	   (eldoc-add-command
+	    'paredit-backward-delete
+	    'paredit-close-round)))
 #+END_SRC
+*** Elixir
+    My new personal web setup is Elixir + Phoenix + Typescript.
 
-Emacs doesn't seem to create the autosave folder for us so let's do that if it doesn't
-exist.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package elixir-mode)
+    #+END_SRC
+*** Python
+    Elpy is a neat environment for python in emacs. It does require rope, jedi, flake8a and importmagic
+    to be available globally so remember to install that!
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package elpy
+	:init
+	(elpy-enable))
+    #+END_SRC
+*** JavaScript
+    One of the main programming languages at work so need to be slick.
 
-#+BEGIN_SRC emacs-lisp
-(make-directory "~/.emacs.d/autosaves" t)
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package js2-refactor)
+      (use-package xref-js2)
+      (use-package js2-mode
+	:mode "\\.js\\'"
+	:init
+	(add-hook 'js2-mode-hook #'js2-refactor-mode)
+	(add-hook 'js2-mode-hook (lambda ()
+				   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+	(js2r-add-keybindings-with-prefix "C-c C-r")
+	:bind (:map js2-mode-map
+		    ("C-k" . js2r-kill)))
+
+
+      (define-key js2-mode-map (kbd "M-.") nil)
+      (add-to-list 'auto-mode-alist '("\\.jsm\\'" .js2-mode))
+    #+END_SRC
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package indium
+	:config
+	(add-hook 'js2-mode-hook #'indium-interaction-mode))
+    #+END_SRC
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package json-mode
+	:mode "\\.json\\'")
+    #+END_SRC
+*** Typescript
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package tide
+	:mode "\\.ts\\'"
+	:config
+	(progn
+	  (tide-setup)
+	  (tide-hl-identifier-mode t))
+	(add-hook 'typescript-mode-hook #'setup-tide-mode))
+    #+END_SRC
+*** Web
+    Web mode works for now it has some rough edges.
+    #+BEGIN_SRC emacs-lisp :tangle yes
+	(use-package web-mode
+	  :init (add-hook 'web-mode-hook
+			  (lambda ()
+			    (setq web-mode-markup-indent-offset 2)
+			    (setq web-mode-css-indent-offset 2)
+			    (setq web-mode-code-indent-offset 2))))
+
+	(add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
+	(add-to-list 'auto-mode-alist '("\\.styl\\'" .web-mode))
+    #+END_SRC
+** Emacs Calc
+   I've been using calc more and more for calculations and it's truly great.
+   #+BEGIN_SRC emacs-lisp :tangle yes
+     (setq math-additional-units
+      '((TiB   "1024 * GiB" "Terra Byte")
+	(GiB   "1024 * MiB" "Giga Byte")
+	(MiB   "1024 * KiB" "Mega Byte")
+	(KiB   "1024 * B"   "Kilo Byte")
+	(B nil "Byte")
+	(Tib   "1024 * Gib" "Terra Bit")
+	(Gib   "1024 * Mib" "Giga Bit")
+	(Mib   "1024 * Kib" "Mega Bit")
+	(Kib   "1024 * b"   "Kilo Bit")
+	(b     "B / 8"      "Bit")))
+     (setq math-units-table nil)
+   #+END_SRC
+** Magit
+   Say no more, say no more. Best. Git. Porcelain.
+   #+BEGIN_SRC emacs-lisp :tangle yes
+     (use-package magit
+       :bind (("C-c v s" . magit-status)
+	      ("C-c v b" . magit-blame)
+	      ("C-c v c" . magit-branch-and-checkout)
+	      ("C-c v l" . magit-log)
+	      ("C-c v o" . magit-checkout)
+	      ("C-c v p" . magit-pull)))
+   #+END_SRC
+** Org
+Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndStates][norang]]s configuration. I still have some cleanup to do but it suits me for now.
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (require 'org)
+  (setq org-directory "~/.emacs.d/org"
+	org-default-notes-file "~/.emacs.d/org/tasks/refile.org"
+	org-log-done 'time
+	org-use-fast-todo-selection t
+	org-treat-S-cursor-todo-selection-as-state-change nil)
+    (setq org-agenda-files '("~/.emacs.d/org/tasks"
+			     "~/.emacs.d/org/refile.org"))
+  (setq org-log-into-drawer "LOGBOOK")
+  (setq org-clock-intro-drawer 1)
 #+END_SRC
+*** Org-todo
+**** Keywords states
+     I used to have multiple different keywords for a bunch of different things but
+     I've decided to try out the approach in [[http://doc.norang.ca/org-mode.html#TasksAndStates][norang]]s configuration.
 
-** Keymappings
-#+BEGIN_SRC emacs-lisp
-;; General
-(global-set-key "\C-xp"         'replace-string)
-(global-set-key (kbd "C-c r")   'comment-region)
-(global-set-key (kbd "C-c u")   'uncomment-region)
-(global-set-key (kbd "C-c s")   'eshell)
-;; eel related bindings
-(global-set-key (kbd "C-c C-d") 'eel/duplicate-line)
-(global-set-key (kbd "C-c f")   'eel/copy-filename-to-killring)
-(global-set-key (kbd "C-h C-s") 'eel/switch-to-scratch)
-;; Org-mode related bindings
-(global-set-key (kbd "C-c c")   'org-capture)
-(global-set-key (kbd "C-c a")   'org-agenda)
-(global-set-key (kbd "C-c l")   'org-store-link)
-(global-set-key (kbd "C-c i")   'org-clock-in)
-(global-set-key (kbd "C-c o")   'org-clock-out)
-#+END_SRC
-** Useful snippets
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (setq org-todo-keywords
+	     '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+	       (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")
+	       (sequence "Not Read" "|" "Read")))
 
-Taken from emacsrocks
+       (setq org-todo-keyword-faces
+	     '(("TODO"      :foreground "red"     :weight bold)
+	       ("NEXT"      :foreground "blue"    :weight bold)
+	       ("DONE"      :foreground "green"   :weight bold)
+	       ("WAITING"   :foreground "orange"  :weight bold)
+	       ("HOLD"      :foreground "magenta" :weight bold)
+	       ("CANCELLED" :foreground "green"   :weight bold)))
+     #+END_SRC
+**** State triggers
+     Tagging tasks when we do certain state changes is done to be able to filter in agenda.
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (setq org-tood-state-tags-triggers
+	     '(("CANCELLED" ("CANCELLED" . t))
+	       ("WAITING"   ("WAITING" . t))
+	       ("HOLD"      ("WAITING") ("HOLD" . t))
+	       ("TODO"      ("WAITING") ("CANCELLED") ("HOLD"))
+	       ("NEXT"      ("WAITING") ("CANCELLED") ("HOLD"))
+	       ("DONE"      ("WAITING") ("CANCELLED") ("HOLD"))))
+     #+END_SRC
+**** Refiling
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (setq org-refile-targets '((nil :maxlevel . 9)
+				  (org-agenda-files :maxlevel . 9)))
+       (setq org-refile-use-outline-path t)
+       (setq org-refile-allow-creating-parent-nodes (quote confirm))
+       (setq org-completion-use-ido t)
+       (setq ido-default-buffer-method 'selected-window)
+       (setq ido-default-file-method 'selected-window)
+       (setq org-indirect-buffer-display 'current-window)
 
-#+BEGIN_SRC emacs-lisp
-(defadvice sgml-delete-tag (after reindent-buffer activate)
-  (cleanup-buffer))
-#+END_SRC
+       (defun refile/verify-refile-target ()
+	 "Exclude todo keywords with a done state from refile targets"
+	 (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+       (setq org-refile-target-verify-function 'refile/verify-refile-target)
+     #+END_SRC
+*** Capture templates
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (setq org-capture-templates
+	      (quote (("t"
+		       "todo"
+		       entry
+		       (file "~/.emacs.d/org/tasks/refile.org")
+		       "* TODO %? %^g\n%U\n%a\n"
+		       :clock-in t
+		       :clock-resume t)
+		      ("j"
+		       "Journal"
+		       entry
+		       (file+datetree "~/.emacs.d/org/notes/journal.org")
+		       "* %?\n%U\n"
+		       :clock-in t
+		       :clock-resume t)
+		      ("c"
+		       "Code Snippet"
+		       entry
+		       (file "~/.emacs.d/org/snippets.org")
+		       "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
+		       :clock-in t
+		       :clock-resume t))))
+    #+END_SRC
+*** Org Agenda
+#+BEGIN_SRC emacs-lisp :tangle yes
+  ;; Do not dim blocked tasks
+  (setq org-agenda-dim-blocked-tasks nil)
 
-#+END_SRC
-** Whitespace things
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'before-save-hook 'whitespace-cleanup)
-#+END_SRC
-* Autocomplete configuration
-For autocomplete I use company-mode
-#+BEGIN_SRC emacs-lisp
-  (use-package company
-    :config
-    (add-hook 'after-init-hook 'global-company-mode))
-#+END_SRC
+  ;; Compact the block agenda view
+  (setq org-agenda-compact-blocks t)
 
-yasnippet for some neat little snippet action
-#+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :diminish yas-minor-mode
-    :init (yas-global-mode)
-    :config (yas-global-mode 1))
-#+END_SRC
-
-and finally flycheck for on the fly syntax checking
-#+BEGIN_SRC emacs-lisp
-  (use-package flycheck
-    :init (global-flycheck-mode))
-#+END_SRC
-* Undo tree mode
-Undo tree is a nice package that let's us have a bit more powerfull undoing in Emacs.
-#+BEGIN_SRC emacs-lisp
-  (use-package undo-tree
-    :diminish undo-tree-mode
-    :config
-    (progn
-      (global-undo-tree-mode)
-      (setq undo-tree-visualizer-timestamps t)
-      (setq undo-tree-visualizer-diff t)))
-#+END_SRC
-* Helm and projectile
-Helm is a cool system for completion and file navigation, I use this in conjunction with projectile for
-project management.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package helm
-    :diminish helm-mode
-    :init
-    (progn
-      (require 'helm-config)
-      (setq helm-candidate-number-limit 100)
-      (setq helm-idle-delay 0.0
-            helm-input-idle-delay 0.01
-            helm-buffers-fuzzy-matching t
-            helm-recentf-fuzzy-match t
-            helm-M-x-fuzzy-match t
-            helm-quick-update t
-            helm-M-x-requires-pattern nil
-            helm-ff-skip-boring-files t)
-      (helm-mode)
-      (helm-autoresize-mode t))
-    :bind (("C-c h"   . helm-mini)
-           ("C-x f"   . helm-for-files)
-           ("C-h a"   . helm-apropos)
-           ("C-x C-b" . helm-buffers-list)
-           ("C-x b"   . helm-buffers-list)
-           ("C-x c o" . helm-occur)
-           ("M-y"     . helm-show-kill-ring)
-           ("M-x"     . helm-M-x)))
-#+END_SRC
-
-Projectile is */the/* system for working with projects in emacs!
-We want to configure it to use helm because awesome + awesome = more awesomeness
-
-#+BEGIN_SRC emacs-lisp
-  (use-package projectile
-    :diminish projectile-mode
-    :config
-    (progn
-      (setq projectile-keymap-prefix (kbd "C-c p"))
-      (setq projectile-completion-system 'default)
-      (setq projectile-enable-caching t)
-      (setq projectile-indexing-method 'alien)
-      (add-to-list 'projectile-globally-ignored-files "node-modules"))
-    :config
-    (projectile-global-mode))
-
-  (use-package helm-projectile)
-#+END_SRC
-
-* Selecting
-** Multiple Cursors
-#+BEGIN_SRC emacs-lisp
-  (use-package multiple-cursors
-    :bind (("C-. l" . mc/edit-lines)
-           ("C-. a" . mc/mark-all-like-this)
-           ("M-n"   . mc/mark-next-like-this)
-           ("M-p"   . mc/mark-previous-like-this)))
-#+END_SRC
-** Expand region
-#+BEGIN_SRC emacs-lisp
-  (use-package expand-region
-    :bind (("C--" . er/expand-region)))
-#+END_SRC
-* Moving Around
-** Avy mode
-Avy allows us to quickly jump in our buffers
-#+BEGIN_SRC emacs-lisp
-  (use-package avy
-    :bind (("M-g j" . avy-goto-char)
-           ("M-g w" . avy-goto-word-1)
-           ("M-g l" . avy-goto-line))
-    :config
-    (avy-setup-default))
-#+END_SRC
-
-Let's also use avy for zapping to chars!
-#+BEGIN_SRC emacs-lisp
-  (use-package avy-zap
-    :bind (("M-z" . avy-zap-up-to-char-dwim)
-           ("M-Z" . avy-zpa-to-char-dwim)))
-#+END_SRC
-** Switching window
-#+BEGIN_SRC emacs-lisp
-  (use-package switch-window
-    :bind (("C-x o" . switch-window)))
-#+END_SRC
-* Programming Languages
-** Lisp configuration
-Since we're using emacs, configuration related to LISP gets its own section!
-
-#+BEGIN_SRC emacs-lisp
-  (use-package paredit
-    :config
-    (progn
-      (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-      (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-      (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-      (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-      (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-      (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)))
-#+END_SRC
-*** Emacs Lisp
-
-Emacs lisp is the language that is used within emacs. Emacs comes with two documents
-documenting the language and emacs specific concepts.
-
-   1. [[info:eintr#Top][Emacs lisp intro]]
-   2. [[info:dir#Top][Emacs Lisp Reference]]
-#+BEGIN_SRC emacs-lisp
-(use-package "eldoc"
-  :diminish eldoc-mode
-  :commands turn-on-eldoc-mode
-  :defer t
-  :init
-  (progn
-    (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
-    (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
-    (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
-#+END_SRC
-** Rust
-We use rust mode and the cargo minor mode. There is also the rustfmt package
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'rust-mode-hook 'cargo-minor-mode)
-  (add-hook 'rust-mode-hook (lambda ()
-                              (local-set-key
-                               (kbd "C-c <tab>" #'rust-format-buffer))))
-#+END_SRC
-
-Racer is the code completion and source code navigation tool for rust.
-We can use it to get nice code completion with company-mode.
-
-#+BEGIN_SRC emacs-lisp
-  (setq racer-cmd "~/.cargo/bin/racer")
-  (setq racer-rust-src-path "~/programming/open-source/rust/src")
-
-  (add-hook 'rust-mode-hook #'racer-mode)
-  (add-hook 'racer-mode-hook #'eldoc-mode)
-  (add-hook 'racer-mode-hook #'company-mode)
-  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
-#+END_SRC
-** Go
-Enable company-go as the backend for company-mode
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'go-mode-hook
-            (lambda ()
-              (set (make-local-variable 'company-backends) '(company-go))
-              (company-mode)))
-#+END_SRC
-** Javascript
-#+BEGIN_SRC emacs-lisp
-  (use-package js2-mode
-           :init
-           (add-hook 'js2-mode-hook #'js2-refactor-mode)
-           (add-hook 'js2-mode-hook (lambda ()
-                                      (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-           (js2r-add-keybindings-with-prefix "C-c C-r")
-           :bind (
-                  :map js2-mode-map
-                       ("C-k" . js2r-kill)))
-  (require 'xref-js2)
-
-  (define-key js-mode-map (kbd "M-.") nil)
-#+END_SRC
-We'll be using js2 mode since it is superior to javascript-mode.
-#+BEGIN_SRC emacs-lisp
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-  (add-to-list 'auto-mode-alist '("\\.jsm\\'" . js2-mode))
-#+END_SRC
-
-
-Javascript stuff from mozilla for working with mozilla js source files.
-Enabling eslint over jshint for flycheck.
-
-#+BEGIN_SRC emacs-lisp
-  (defun js-mode-hacks ()
-    (setq-local mode-name "JS")
-    ;; Set this locally so that the head.js rule continues to work
-    ;; properly.  In particular for a mochitest we want to preserve the
-    ;; "browser_" prefix.
-    (when (buffer-file-name)
-      (let ((base (file-name-nondirectory (buffer-file-name))))
-        (when (string-match "^\\([a-z]+_\\)" base)
-          (setq-local flycheck-temp-prefix (match-string 1 base))))
-      (let ((base-dir (locate-dominating-file (buffer-file-name)
-                                              ".eslintignore")))
-        (when base-dir
-          (let ((eslint (expand-file-name
-                         "tools/lint/eslint/node_modules/.bin/eslint" base-dir)))
-            (when (file-exists-p eslint)
-              (setq-local flycheck-javascript-eslint-executable eslint))))))
-    (flycheck-mode 1))
-
-  (add-hook 'js2-mode-hook #'js-mode-hacks)
-  (add-hook 'js2-mode-hook
-            (lambda ()
-              (setq
-               js-indent-level 2
-               indent-tabs-mode nil)))
-#+END_SRC
-** Web-mode
-#+BEGIN_SRC emacs-lisp
-  (use-package web-mode
-    :init (add-hook 'web-mode-hook
-                    (lambda ()
-                      (setq web-mode-markup-indent-offset 2)
-                      (setq web-mode-css-indent-offset 2)
-                      (setq web-mode-code-indent-offset 2))))
-
-  (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
-  (add-to-list 'auto-mode-alist '("\\.styl\\'" .web-mode))
-#+END_SRC
-* Org-mode configuration
-
-This section contains all of the configuration for org-mode and org-mode related
-settings for emacs. This is mostly based and tweeked from [[http://doc.norang.ca/org-mode.html][Org Mode - Organize Your Life In Plain Text!]] which is an amazing resource for org-mode from Bernt Hansen.
-
-Set base directory and default notes file.
-
-#+BEGIN_SRC emacs-lisp
-(setq org-directory "~/.emacs.d/org")
-(setq org-default-notes-file "~/.emacs.d/org/refile.org")
-#+END_SRC
-
-** Outline of usage
-
-I have several different files that I use to organize things in org-mode for. The default file that everything goes into is refile.org.
-Here everything goes in during the day so that I can quickly add notes, tasks and everything else that one could think about. Everything
-in this file is eventually put into the correct file for archiving and context.
-
-*** Task Files
-The current files that I use for organizing files which can be seen in the table below.
-All task files reside in the "~/.emacs.d/org/tasks" directory.
-
-|-------------+------------------------------------------------------------------|
-| Filename    | Description                                                      |
-|-------------+------------------------------------------------------------------|
-| work.org    | Tasks relating to work                                           |
-| home.org    | Personal tasks for example stuff that I need to get done at home |
-|-------------+------------------------------------------------------------------|
-
-*** Drill files
-I use drill for studying and spaced repetition learning. All of these files resides in "~/.emacs.d/org/drill"
-
-|--------------------+--------------------------------------------------------------|
-| Filename           | Description                                                  |
-|--------------------+--------------------------------------------------------------|
-| presidents.org     | Learning the name and chronology of United States Presidents |
-| eng_vocabulary.org | Expanding my english vocabulary                              |
-|--------------------+--------------------------------------------------------------|
-
-*** Notes files
-General notes file for journaling, meetings and book notes. All of these files reside in
-"~/.emacs.d/org/notes"
-
-|--------------+----------------|
-| Filename     | Description    |
-|--------------+----------------|
-| meetings.org | Meetings notes |
-| journal.org  | Journal        |
-| books.org    | Book notes     |
-| papers.org   | Paper notes    |
-|--------------+----------------|
-
-** General Configuration
-Keymappings for org-mode can be found in the [[*Keymappings][Keymappings]] part of this file.
-
-*** Agenda setup
-Agenda files is all files in the tasks directory
-
-#+BEGIN_SRC emacs-lisp
-  (setq org-agenda-files '("~/.emacs.d/org/tasks"
-                           "~/.emacs.d/org/drill"
-                           "~/.emacs.d/org/notes/notes.org"
-                           "~/.emacs.d/org/refile.org"))
-#+END_SRC
-
-** Tasks and States
-
-Some basic configuration
-
-#+BEGIN_SRC emacs-lisp
-(setq org-log-done 'time)
-(setq org-use-fast-todo-selection t)
-(setq org-treat-S-cursor-todo-selection-as-state-change nil)
-#+END_SRC
-
-The last s-expression in the above source code lets us change the state with S-left and S-right without changing or adding timestamps etc.
-
-Different todo states for different work places / bug trackers etc.
-
-#+BEGIN_SRC emacs-lisp
-(setq org-todo-keywords
-      '((sequence "TODO(t)" "|" "DONE(d)")
-        (sequence "Assigned" "WIP" "Review-" "Review?" "Review+" "Checkin" "|" "Pushed")
-        (sequence "In Progress" "|" "Published")
-        (sequence "Not Read" "Reading" "|" "Read")))
-#+END_SRC
-
-** Agenda
-
-I've started working with TODOs more and more and org-agenda is of course great for customizing.
-Below is a custom agenda command that only shows tasks that have been tagged with my place of work
-so that I can focus on them when I work.
-
-#+BEGIN_SRC emacs-lisp
+  ;; Custom agenda command definitions
   (setq org-agenda-custom-commands
-        '(("w" "Work Tasks" tags-todo "expressen"
-           ((org-agenda-files '("~/.emacs.d/org/tasks/work.org" "~/.emacs.d/org/tasks/refile.org"))))))
-#+END_SRC
-** Capture templates
+	(quote (("N" "Notes" tags "NOTE"
+		 ((org-agenda-overriding-header "Notes")
+		  (org-tags-match-list-sublevels t)))
+		("h" "Habits" tags-todo "STYLE=\"habit\""
+		 ((org-agenda-overriding-header "Habits")
+		  (org-agenda-sorting-strategy
+		   '(todo-state-down effort-up category-keep))))
+		(" " "Agenda"
+		 ((agenda "" nil)
+		  (tags "REFILE"
+			((org-agenda-overriding-header "Tasks to Refile")
+			 (org-tags-match-list-sublevels nil)))
+		  (tags-todo "-CANCELLED/!"
+			     ((org-agenda-overriding-header "Stuck Projects")
+			      (org-agenda-skip-function 'bh/skip-non-stuck-projects)
+			      (org-agenda-sorting-strategy
+			       '(category-keep))))
+		  (tags-todo "-HOLD-CANCELLED/!"
+			     ((org-agenda-overriding-header "Projects")
+			      (org-agenda-skip-function 'bh/skip-non-projects)
+			      (org-tags-match-list-sublevels 'indented)
+			      (org-agenda-sorting-strategy
+			       '(category-keep))))
+		  (tags-todo "-CANCELLED/!NEXT"
+			     ((org-agenda-overriding-header (concat "Project Next Tasks"
+								    (if bh/hide-scheduled-and-waiting-next-tasks
+									""
+								      " (including WAITING and SCHEDULED tasks)")))
+			      (org-agenda-skip-function 'bh/skip-projects-and-habits-and-single-tasks)
+			      (org-tags-match-list-sublevels t)
+			      (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-sorting-strategy
+			       '(todo-state-down effort-up category-keep))))
+		  (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
+			     ((org-agenda-overriding-header (concat "Project Subtasks"
+								    (if bh/hide-scheduled-and-waiting-next-tasks
+									""
+								      " (including WAITING and SCHEDULED tasks)")))
+			      (org-agenda-skip-function 'bh/skip-non-project-tasks)
+			      (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-sorting-strategy
+			       '(category-keep))))
+		  (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
+			     ((org-agenda-overriding-header (concat "Standalone Tasks"
+								    (if bh/hide-scheduled-and-waiting-next-tasks
+									""
+								      " (including WAITING and SCHEDULED tasks)")))
+			      (org-agenda-skip-function 'bh/skip-project-tasks)
+			      (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-sorting-strategy
+			       '(category-keep))))
+		  (tags-todo "-CANCELLED+WAITING|HOLD/!"
+			     ((org-agenda-overriding-header (concat "Waiting and Postponed Tasks"
+								    (if bh/hide-scheduled-and-waiting-next-tasks
+									""
+								      " (including WAITING and SCHEDULED tasks)")))
+			      (org-agenda-skip-function 'bh/skip-non-tasks)
+			      (org-tags-match-list-sublevels nil)
+			      (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+			      (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)))
+		  (tags "-REFILE/"
+			((org-agenda-overriding-header "Tasks to Archive")
+			 (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
+			 (org-tags-match-list-sublevels nil))))
+		 nil))))
 
-Here we configure a fast way to get new tasks, notes etc. into our files using org-capture.
-Entering `C-c c` we will choose one of the defined templates below and then with `C-c C-c` the new note or task will be created and placed in the appropriate file. Most captures just go into the refile file for later refiling to the appropriate file. This is for quick capturing of new stuff that comes in so as to not break up my workflow all to much.
-
-Mote information about templates are found at: [[http://orgmode.org/manual/Capture-templates.html][Capture Templates at orgmode.org]]
-
-The current templates that exists are:
-
-  - A new task (t)
-    Captures a new todo item task
-  - A new journal entry (j)
-    Captures a new journal entry
-  - A new code snippet (c)
-    Captures the selected region for a new code snippet
-
-#+BEGIN_SRC emacs-lisp
-  (setq org-capture-templates
-        (quote (("t"
-                 "todo"
-                 entry
-                 (file "~/.emacs.d/org/tasks/refile.org")
-                 "* TODO %? %^g\n%U\n%a\n"
-                 :clock-in t
-                 :clock-resume t)
-                ("j"
-                 "Journal"
-                 entry
-                 (file+datetree "~/.emacs.d/org/notes/journal.org")
-                 "* %?\n%U\n"
-                 :clock-in t
-                 :clock-resume t)
-                ("c"
-                 "Code Snippet"
-                 entry
-                 (file "~/.emacs.d/org/snippets.org")
-                 "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
-                 :clock-in t
-                 :clock-resume t))))
-#+END_SRC
-
-*** TODO Make the code snippets go into the snippet file under the correct heading by default
-
-    My snippets file is organized with the languages as the top level heading.
-    Currently all new snippets first go into the refile file and later refiled under the
-    correct language header. It would be neat to get it in under the correct heading directly.
-
-    My guess is that we can use the file+function feature of the template and build a custom
-    function that will find the correct headline someway.
-
-    Crude first idea is to just prompt the user for a headline and then go to that headline.
-
-** Refile setup
-
-#+BEGIN_SRC emacs-lisp
-(setq org-refile-targets '((nil :maxlevel . 9)
-                           (org-agenda-files :maxlevel . 9)))
-(setq org-refile-use-outline-path t)
-(setq org-refile-allow-creating-parent-nodes (quote confirm))
-(setq org-completion-use-ido t)
-(setq ido-default-buffer-method 'selected-window)
-(setq ido-default-file-method 'selected-window)
-(setq org-indirect-buffer-display 'current-window)
-
-(defun refile/verify-refile-target ()
-  "Exclude todo keywords with a done state from refile targets"
-  (not (member (nth 2 (org-heading-components)) org-done-keywords)))
-(setq org-refile-target-verify-function 'refile/verify-refile-target)
-#+END_SRC
-
-** Org-drill
-Drill mode is used for spaced repetition learning.
-
-#+BEGIN_SRC emacs-lisp
-(use-package org-drill
-  :config (progn
-            (add-to-list 'org-modules 'org-drill)
-            (setq org-drill-add-random-noise-to-intervals-p t)
-            (setq org-drill-hint-separator "||")
-            (setq org-drill-left-cloze-delimiter "<[")
-            (setq org-drill-right-cloze-delimiter "]>")
-            (setq org-drill-learn-fraction 0.25)))
 #+END_SRC
 
-*** org-preview-latex-fragment fix
-The function “org-preview-latex-fragment” was deprecated a while back, but org-drill still depends on it. So here’s a quick hack that will display the LaTeX in org-drill.
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (defun bh/is-project-p ()
+    "Any task with a todo keyword subtask"
+    (save-restriction
+      (widen)
+      (let ((has-subtask)
+	    (subtree-end (save-excursion (org-end-of-subtree t)))
+	    (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+	(save-excursion
+	  (forward-line 1)
+	  (while (and (not has-subtask)
+		      (< (point) subtree-end)
+		      (re-search-forward "^\*+ " subtree-end t))
+	    (when (member (org-get-todo-state) org-todo-keywords-1)
+	      (setq has-subtask t))))
+	(and is-a-task has-subtask))))
 
-#+BEGIN_SRC emacs-lisp
-(defun org-preview-latex-fragment ()
-  (interactive)
-  (org-remove-latex-fragment-image-overlays)
-  (org-toggle-latex-fragment '(4)))
+  (defun bh/is-project-subtree-p ()
+    "Any task with a todo keyword that is in a project subtree.
+  Callers of this function already widen the buffer view."
+    (let ((task (save-excursion (org-back-to-heading 'invisible-ok)
+				(point))))
+      (save-excursion
+	(bh/find-project-task)
+	(if (equal (point) task)
+	    nil
+	  t))))
+
+  (defun bh/is-task-p ()
+    "Any task with a todo keyword and no subtask"
+    (save-restriction
+      (widen)
+      (let ((has-subtask)
+	    (subtree-end (save-excursion (org-end-of-subtree t)))
+	    (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+	(save-excursion
+	  (forward-line 1)
+	  (while (and (not has-subtask)
+		      (< (point) subtree-end)
+		      (re-search-forward "^\*+ " subtree-end t))
+	    (when (member (org-get-todo-state) org-todo-keywords-1)
+	      (setq has-subtask t))))
+	(and is-a-task (not has-subtask)))))
+
+  (defun bh/is-subproject-p ()
+    "Any task which is a subtask of another project"
+    (let ((is-subproject)
+	  (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+      (save-excursion
+	(while (and (not is-subproject) (org-up-heading-safe))
+	  (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
+	    (setq is-subproject t))))
+      (and is-a-task is-subproject)))
+
+  (defun bh/list-sublevels-for-projects-indented ()
+    "Set org-tags-match-list-sublevels so when restricted to a subtree we list all subtasks.
+    This is normally used by skipping functions where this variable is already local to the agenda."
+    (if (marker-buffer org-agenda-restrict-begin)
+	(setq org-tags-match-list-sublevels 'indented)
+      (setq org-tags-match-list-sublevels nil))
+    nil)
+
+  (defun bh/list-sublevels-for-projects ()
+    "Set org-tags-match-list-sublevels so when restricted to a subtree we list all subtasks.
+    This is normally used by skipping functions where this variable is already local to the agenda."
+    (if (marker-buffer org-agenda-restrict-begin)
+	(setq org-tags-match-list-sublevels t)
+      (setq org-tags-match-list-sublevels nil))
+    nil)
+
+  (defvar bh/hide-scheduled-and-waiting-next-tasks t)
+
+  (defun bh/toggle-next-task-display ()
+    (interactive)
+    (setq bh/hide-scheduled-and-waiting-next-tasks (not bh/hide-scheduled-and-waiting-next-tasks))
+    (when  (equal major-mode 'org-agenda-mode)
+      (org-agenda-redo))
+    (message "%s WAITING and SCHEDULED NEXT Tasks" (if bh/hide-scheduled-and-waiting-next-tasks "Hide" "Show")))
+
+  (defun bh/skip-stuck-projects ()
+    "Skip trees that are not stuck projects"
+    (save-restriction
+      (widen)
+      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+	(if (bh/is-project-p)
+	    (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+		   (has-next ))
+	      (save-excursion
+		(forward-line 1)
+		(while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
+		  (unless (member "WAITING" (org-get-tags-at))
+		    (setq has-next t))))
+	      (if has-next
+		  nil
+		next-headline)) ; a stuck project, has subtasks but no next task
+	  nil))))
+
+  (defun bh/skip-non-stuck-projects ()
+    "Skip trees that are not stuck projects"
+    ;; (bh/list-sublevels-for-projects-indented)
+    (save-restriction
+      (widen)
+      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+	(if (bh/is-project-p)
+	    (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+		   (has-next ))
+	      (save-excursion
+		(forward-line 1)
+		(while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
+		  (unless (member "WAITING" (org-get-tags-at))
+		    (setq has-next t))))
+	      (if has-next
+		  next-headline
+		nil)) ; a stuck project, has subtasks but no next task
+	  next-headline))))
+
+  (defun bh/skip-non-projects ()
+    "Skip trees that are not projects"
+    ;; (bh/list-sublevels-for-projects-indented)
+    (if (save-excursion (bh/skip-non-stuck-projects))
+	(save-restriction
+	  (widen)
+	  (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+	    (cond
+	     ((bh/is-project-p)
+	      nil)
+	     ((and (bh/is-project-subtree-p) (not (bh/is-task-p)))
+	      nil)
+	     (t
+	      subtree-end))))
+      (save-excursion (org-end-of-subtree t))))
+
+  (defun bh/skip-non-tasks ()
+    "Show non-project tasks.
+  Skip project and sub-project tasks, habits, and project related tasks."
+    (save-restriction
+      (widen)
+      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+	(cond
+	 ((bh/is-task-p)
+	  nil)
+	 (t
+	  next-headline)))))
+
+  (defun bh/skip-project-trees-and-habits ()
+    "Skip trees that are projects"
+    (save-restriction
+      (widen)
+      (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+	(cond
+	 ((bh/is-project-p)
+	  subtree-end)
+	 (t
+	  nil)))))
+
+  (defun bh/skip-projects-and-habits-and-single-tasks ()
+    "Skip trees that are projects, tasks that are habits, single non-project tasks"
+    (save-restriction
+      (widen)
+      (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+	(cond
+	 ((and bh/hide-scheduled-and-waiting-next-tasks
+	       (member "WAITING" (org-get-tags-at)))
+	  next-headline)
+	 ((bh/is-project-p)
+	  next-headline)
+	 ((and (bh/is-task-p) (not (bh/is-project-subtree-p)))
+	  next-headline)
+	 (t
+	  nil)))))
+
+  (defun bh/skip-project-tasks-maybe ()
+    "Show tasks related to the current restriction.
+  When restricted to a project, skip project and sub project tasks, habits, NEXT tasks, and loose tasks.
+  When not restricted, skip project and sub-project tasks, habits, and project related tasks."
+    (save-restriction
+      (widen)
+      (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+	     (next-headline (save-excursion (or (outline-next-heading) (point-max))))
+	     (limit-to-project (marker-buffer org-agenda-restrict-begin)))
+	(cond
+	 ((bh/is-project-p)
+	  next-headline)
+	 ((and (not limit-to-project)
+	       (bh/is-project-subtree-p))
+	  subtree-end)
+	 ((and limit-to-project
+	       (bh/is-project-subtree-p)
+	       (member (org-get-todo-state) (list "NEXT")))
+	  subtree-end)
+	 (t
+	  nil)))))
+
+  (defun bh/skip-project-tasks ()
+    "Show non-project tasks.
+  Skip project and sub-project tasks, habits, and project related tasks."
+    (save-restriction
+      (widen)
+      (let* ((subtree-end (save-excursion (org-end-of-subtree t))))
+	(cond
+	 ((bh/is-project-p)
+	  subtree-end)
+	 ((bh/is-project-subtree-p)
+	  subtree-end)
+	 (t
+	  nil)))))
+
+  (defun bh/skip-non-project-tasks ()
+    "Show project tasks.
+  Skip project and sub-project tasks, habits, and loose non-project tasks."
+    (save-restriction
+      (widen)
+      (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+	     (next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+	(cond
+	 ((bh/is-project-p)
+	  next-headline)
+	 ((and (bh/is-project-subtree-p)
+	       (member (org-get-todo-state) (list "NEXT")))
+	  subtree-end)
+	 ((not (bh/is-project-subtree-p))
+	  subtree-end)
+	 (t
+	  nil)))))
+
+  (defun bh/skip-projects-and-habits ()
+    "Skip trees that are projects and tasks that are habits"
+    (save-restriction
+      (widen)
+      (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+	(cond
+	 ((bh/is-project-p)
+	  subtree-end)
+	 (t
+	  nil)))))
+
+  (defun bh/skip-non-subprojects ()
+    "Skip trees that are not projects"
+    (let ((next-headline (save-excursion (outline-next-heading))))
+      (if (bh/is-subproject-p)
+	  nil
+	next-headline)))
 #+END_SRC
 
-* TeX and LaTeX
-Force the use of pdflatex (will fail if pdflatex is not installed).
+#+BEGIN_SRC emacs-lisp :tangle yes
+  ;;
+  ;; Resume clocking task when emacs is restarted
+  (org-clock-persistence-insinuate)
+  ;;
+  ;; Show lot of clocking history so it's easy to pick items off the C-F11 list
+  (setq org-clock-history-length 23)
+  ;; Resume clocking task on clock-in if the clock is open
+  (setq org-clock-in-resume t)
+  ;; Change tasks to NEXT when clocking in
+  (setq org-clock-in-switch-to-state 'bh/clock-in-to-next)
+  ;; Separate drawers for clocking and logs
+  (setq org-drawers (quote ("PROPERTIES" "LOGBOOK")))
+  ;; Save clock data and state changes and notes in the LOGBOOK drawer
+  (setq org-clock-into-drawer t)
+  ;; Sometimes I change tasks I'm clocking quickly - this removes clocked tasks with 0:00 duration
+  (setq org-clock-out-remove-zero-time-clocks t)
+  ;; Clock out when moving task to a done state
+  (setq org-clock-out-when-done t)
+  ;; Save the running clock and all clock history when exiting Emacs, load it on startup
+  (setq org-clock-persist t)
+  ;; Do not prompt to resume an active clock
+  (setq org-clock-persist-query-resume nil)
+  ;; Enable auto clock resolution for finding open clocks
+  (setq org-clock-auto-clock-resolution (quote when-no-clock-is-running))
+  ;; Include current clocking task in clock reports
+  (setq org-clock-report-include-clocking-task t)
 
-#+BEGIN_SRC emacs-lisp
-(setq latex-run-command "pdflatex")
-(setq text-output-extension ".pdf")
-#+END_SRC
-* Notmuch (mail)
-#+BEGIN_SRC emacs-lisp
-  (use-package notmuch
-    :init
-    (progn
-      (setq mail-host-address "pagefault.se")
-      (setq user-full-name "Eric Skoglund")
-      (setq user-mail-adress "eric@pagefault.se")
-      (setq mail-user-agent 'message-user-agent)
-      (setq message-send-mail-function 'message-send-mail-with-sendmail)
-      (setq message-kill-buffer-on-exit t)
-      (setq mail-specify-envelope-from t)
-      (setq sendmail-program "/usr/bin/msmtp"
-            mail-specify-envelope-from t
-            mail-envelope-from 'header
-            message-sendmail-envelope-from 'header)
-      (setq notmuch-crypto-process-mime t))
-    :config
-    (setq notmuch-saved-searches
-          '((:name "inbox"
-                   :query "tag:inbox"
-                   :count-query "tag:inbox and tag:unread"
-                   :key "i")
-            (:name "unread"
-                   :query "tag:unread"
-                   :key "u"
-                   :count-query "tag:unread")
-            (:name "flagged"
-                   :query "tag:flagged"
-                   :key "f"
-                   :count-query "tag:flagged and tag:unread")
-            (:name "drafts"
-                   :query "tag:draft"
-                   :count-query "tag:draft"
-                   :key "d")
-            (:name "all mail"
-                   :query "*"
-                   :count-query "*"
-                   :key "a")
-            (:name "emacs-devel-unread"
-                   :query "tag:lists and +emacs-devel and tag:unread"
-                   :count-query "tag:lists and +emacs-devel and tag:unread"
-                   :key "em")
-            (:name "emacs-bugs"
-                   :query "tag:lists/bug-gnu-emacs and tag:unread"
-                   :count-query "tag:lists/bug-gnu-emacs and tag:unread"
-                   :key "eb")
-            (:name "erlang-questions"
-                   :query "tag:lists/erlang-questions and tag:unread"
-                   :count-query "tag:lists/erlang-questions and tag:unread"
-                   :key "erl")
-            (:name "foss-sthlm"
-                   :query "tag:lists/lists/foss-sthlm and tag:unread"
-                   :count-query "tag:lists/lists/foss-sthlm and tag:unread"
-                   :key "fs"))))
-#+END_SRC
-* Elfeed
-#+BEGIN_SRC emacs-lisp
-  (use-package elfeed
-    :bind (("C-x w" . elfeed))
-    :config
-    (setq elfeed-feeds
-          '("http://nullprogram.com/feed/"
-            "http://www.tedunangst.com/flak/rss"
-            "https://jeremykun.com/feed/"
-            "https://pagefault.se/atom.xml"
-            "https://krebsonsecurity.com/feed/"
-            "https://www.schneier.com/blog/atom.xml")))
-#+END_SRC
-* Magit
+  (setq bh/keep-clock-running nil)
 
-We'll make all our interactions with magit begin with `C-c v`. Need to look into how
-you bind keys for custom aliases.
+  (defun bh/clock-in-to-next (kw)
+    "Switch a task from TODO to NEXT when clocking in.
+  Skips capture tasks, projects, and subprojects.
+  Switch projects and subprojects from NEXT back to TODO"
+    (when (not (and (boundp 'org-capture-mode) org-capture-mode))
+      (cond
+       ((and (member (org-get-todo-state) (list "TODO"))
+	     (bh/is-task-p))
+	"NEXT")
+       ((and (member (org-get-todo-state) (list "NEXT"))
+	     (bh/is-project-p))
+	"TODO"))))
 
-#+BEGIN_SRC emacs-lisp
-    (use-package magit
-      :bind (("C-c v b" . magit-blame)
-             ("C-c v c" . magit-branch-and-checkout)
-             ("C-c v l" . magit-log)
-             ("C-c v m" . magit-merge)
-             ("C-c v o" . magit-checkout)
-             ("C-c v p" . magit-pull)
-             ("C-c v s" . magit-status)))
+  (defun bh/find-project-task ()
+    "Move point to the parent (project) task if any"
+    (save-restriction
+      (widen)
+      (let ((parent-task (save-excursion (org-back-to-heading 'invisible-ok) (point))))
+	(while (org-up-heading-safe)
+	  (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
+	    (setq parent-task (point))))
+	(goto-char parent-task)
+	parent-task)))
+
+  (defun bh/punch-in (arg)
+    "Start continuous clocking and set the default task to the
+  selected task.  If no task is selected set the Organization task
+  as the default task."
+    (interactive "p")
+    (setq bh/keep-clock-running t)
+    (if (equal major-mode 'org-agenda-mode)
+	;;
+	;; We're in the agenda
+	;;
+	(let* ((marker (org-get-at-bol 'org-hd-marker))
+	       (tags (org-with-point-at marker (org-get-tags-at))))
+	  (if (and (eq arg 4) tags)
+	      (org-agenda-clock-in '(16))
+	    (bh/clock-in-organization-task-as-default)))
+      ;;
+      ;; We are not in the agenda
+      ;;
+      (save-restriction
+	(widen)
+	; Find the tags on the current task
+	(if (and (equal major-mode 'org-mode) (not (org-before-first-heading-p)) (eq arg 4))
+	    (org-clock-in '(16))
+	  (bh/clock-in-organization-task-as-default)))))
+
+  (defun bh/punch-out ()
+    (interactive)
+    (setq bh/keep-clock-running nil)
+    (when (org-clock-is-active)
+      (org-clock-out))
+    (org-agenda-remove-restriction-lock))
+
+  (defun bh/clock-in-default-task ()
+    (save-excursion
+      (org-with-point-at org-clock-default-task
+	(org-clock-in))))
+
+  (defun bh/clock-in-parent-task ()
+    "Move point to the parent (project) task if any and clock in"
+    (let ((parent-task))
+      (save-excursion
+	(save-restriction
+	  (widen)
+	  (while (and (not parent-task) (org-up-heading-safe))
+	    (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
+	      (setq parent-task (point))))
+	  (if parent-task
+	      (org-with-point-at parent-task
+		(org-clock-in))
+	    (when bh/keep-clock-running
+	      (bh/clock-in-default-task)))))))
+
+  (defvar bh/organization-task-id "eb155a82-92b2-4f25-a3c6-0304591af2f9")
+
+  (defun bh/clock-in-organization-task-as-default ()
+    (interactive)
+    (org-with-point-at (org-id-find bh/organization-task-id 'marker)
+      (org-clock-in '(16))))
+
+  (defun bh/clock-out-maybe ()
+    (when (and bh/keep-clock-running
+	       (not org-clock-clocking-in)
+	       (marker-buffer org-clock-default-task)
+	       (not org-clock-resolving-clocks-due-to-idleness))
+      (bh/clock-in-parent-task)))
+
+  (add-hook 'org-clock-out-hook 'bh/clock-out-maybe 'append)
 #+END_SRC
