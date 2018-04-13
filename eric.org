@@ -54,7 +54,19 @@ Instead of the init.el file doing the tangle this will now just be handled with 
 	      (cons (lambda () (y-or-n-p "Really kill emacs?"))
 		    kill-emacs-query-functions))
     #+END_SRC
-  *** Load Path
+
+   I really don't like the alarm bell everytime i press =C-g= and don't want to flash the whole screen.
+   From the emacs wiki comes a little function that only flashes the mode line.
+   #+BEGIN_SRC emacs-lisp :tangle yes
+     (setq ring-bell-function
+	   (lambda ()
+	     (let ((orig-fg (face-foreground 'mode-line)))
+	       (set-face-foreground 'mode-line "#F2804F")
+	       (run-with-idle-timer 0.1 nil
+				    (lambda (fg) (set-face-foreground 'mode-line fg))
+				    orig-fg))))
+   #+END_SRC
+*** Load Path
     Now is also a good time to setup some load path stuff.
 
     #+BEGIN_SRC emacs-lisp :tangle yes
@@ -122,6 +134,14 @@ Great now we're ready to get our packages up and running so we can start using o
       (global-font-lock-mode t)
     #+END_SRC
 
+    Here is also a good place to stick in the smart-modeline
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (use-package smart-mode-line
+	:config
+	(progn
+	  (sml/setup)
+	  (setq sml/theme 'respectful)))
+    #+END_SRC
 *** Fringe and line
 Let's use the native line numbering from emacs 26!
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -180,13 +200,13 @@ I like visual-line mode so let's use that
 
     Let's make sure that we cleanup whitespace.
     #+BEGIN_SRC emacs-lisp :tangle yes
-      (add-hook 'before-save-hook 'whitespace-cleanup)'
+      (add-hook 'before-save-hook 'whitespace-cleanup)
     #+END_SRC
 **** Multiple cursors and expand-region
      Magnars excellent stuff is a must have!
      #+BEGIN_SRC emacs-lisp :tangle yes
        (use-package expand-region
-	 :bind ("C--" . er/expand-region))
+	 :bind ("C-\-" . er/expand-region))
      #+END_SRC
 
      Before we setup multiple cursos let's setup the selected package which provides
@@ -319,14 +339,16 @@ I like visual-line mode so let's use that
 	 (helm-mode))
        :bind (("C-c h"   . helm-mini)
 	      ("C-h a"   . helm-apropos)
-	      ("C-x C-b" . helm-buffer-list)
-	      ("C-x b"   . helm-buffer-list)
+	      ("C-x C-b" . helm-buffers-list)
+	      ("C-x b"   . helm-buffers-list)
 	      ("M-y"     . helm-show-kill-ring)
 	      ("M-x"     . helm-M-x)
 	      ("C-x c o" . helm-occur)
 	      ("C-x c s" . helm-swoop)
 	      ("C-x c y" . helm-yas-complete)
-	      ("C-x c Y" . helm-yas-create-snippet-on-region)))
+	      ("C-x c Y" . helm-yas-create-snippet-on-region)
+	      ("C-x C-f" . helm-find-files)
+	      ("C-x f"   . helm-mini)))
 
      (ido-mode -1)
    #+END_SRC
