@@ -50,21 +50,21 @@ Instead of the init.el file doing the tangle this will now just be handled with 
 
     For when I actually don't want to kill emacs.
     #+BEGIN_SRC emacs-lisp :tangle yes
-	(setq kill-emacs-query-functions
-	      (cons (lambda () (y-or-n-p "Really kill emacs?"))
-		    kill-emacs-query-functions))
+        (setq kill-emacs-query-functions
+              (cons (lambda () (y-or-n-p "Really kill emacs?"))
+                    kill-emacs-query-functions))
     #+END_SRC
 
    I really don't like the alarm bell everytime i press =C-g= and don't want to flash the whole screen.
    From the emacs wiki comes a little function that only flashes the mode line.
    #+BEGIN_SRC emacs-lisp :tangle yes
      (setq ring-bell-function
-	   (lambda ()
-	     (let ((orig-fg (face-foreground 'mode-line)))
-	       (set-face-foreground 'mode-line "#F2804F")
-	       (run-with-idle-timer 0.1 nil
-				    (lambda (fg) (set-face-foreground 'mode-line fg))
-				    orig-fg))))
+           (lambda ()
+             (let ((orig-fg (face-foreground 'mode-line)))
+               (set-face-foreground 'mode-line "#F2804F")
+               (run-with-idle-timer 0.1 nil
+                                    (lambda (fg) (set-face-foreground 'mode-line fg))
+                                    orig-fg))))
    #+END_SRC
 *** Load Path
     Now is also a good time to setup some load path stuff.
@@ -75,7 +75,7 @@ Instead of the init.el file doing the tangle this will now just be handled with 
       (add-to-list 'load-path "~/.emacs.d/elisp")
 
       (define-inline emacs-path (path)
-	(expand-file-name path user-emacs-directory))
+        (expand-file-name path user-emacs-directory))
     #+END_SRC
 
 *** Package
@@ -87,12 +87,12 @@ Instead of the init.el file doing the tangle this will now just be handled with 
       (package-initialize)
 
       (setq package-archives
-	    '(("melpa" . "http://melpa.org/packages/")
-	      ("org"   . "http://orgmode.org/elpa/")
-	      ("gnu"   . "http://elpa.gnu.org/packages/")))
+            '(("melpa" . "http://melpa.org/packages/")
+              ("org"   . "http://orgmode.org/elpa/")
+              ("gnu"   . "http://elpa.gnu.org/packages/")))
 
       (when (not package-archive-contents)
-	(package-refresh-contents))
+        (package-refresh-contents))
     #+END_SRC
 
 
@@ -101,13 +101,13 @@ Instead of the init.el file doing the tangle this will now just be handled with 
 
      #+BEGIN_SRC emacs-lisp :tangle yes
        (unless (package-installed-p 'use-package)
-	 (package-install 'use-package))
+         (package-install 'use-package))
 
        (setq use-package-always-ensure t)
        (require 'use-package)
 
        (use-package auto-compile
-	 :config (auto-compile-on-load-mode))
+         :config (auto-compile-on-load-mode))
        (setq load-prefer-newer t)
      #+END_SRC
 
@@ -122,9 +122,9 @@ Great now we're ready to get our packages up and running so we can start using o
 
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package server
-	:unless noninteractive
-	:no-require
-	:hook (after-init . server-start))
+        :unless noninteractive
+        :no-require
+        :hook (after-init . server-start))
     #+END_SRC
 ** Basic Configuration
 *** Color Theme!
@@ -137,10 +137,11 @@ Great now we're ready to get our packages up and running so we can start using o
     Here is also a good place to stick in the smart-modeline
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package smart-mode-line
-	:config
-	(progn
-	  (sml/setup)
-	  (setq sml/theme 'respectful)))
+        :config
+        (progn
+          (setq sml/no-confirm-load-theme t)
+          (sml/setup)
+          (setq sml/theme 'respectful)))
     #+END_SRC
 *** Fringe and line
 Let's use the native line numbering from emacs 26!
@@ -160,15 +161,15 @@ I like visual-line mode so let's use that
      I switch some of the keys in os x just since stuff brakes. I also had some path issues fixed here.
      #+BEGIN_SRC emacs-lisp :tangle yes
        (if (string= system-type "darwin")
-	   (progn
-	     (setq mac-command-modifier 'meta)
-	     (setq mac-option-modifier 'meta)
-	     (setq mac-right-option-modifier nil)))
+           (progn
+             (setq mac-command-modifier 'meta)
+             (setq mac-option-modifier 'meta)
+             (setq mac-right-option-modifier nil)))
 
        (when (memq window-system '(max ns))
-	 (setq exec-path-from-shell-check-startup-files nil)
-	 (exec-path-from-shell-initialize)
-	 (exec-path-from-shell-copy-envs '("PATH")))
+         (setq exec-path-from-shell-check-startup-files nil)
+         (exec-path-from-shell-initialize)
+         (exec-path-from-shell-copy-envs '("PATH")))
 
      #+END_SRC
 *** Backups
@@ -206,7 +207,7 @@ I like visual-line mode so let's use that
      Magnars excellent stuff is a must have!
      #+BEGIN_SRC emacs-lisp :tangle yes
        (use-package expand-region
-	 :bind ("C-\-" . er/expand-region))
+         :bind ("C-\-" . er/expand-region))
      #+END_SRC
 
      Before we setup multiple cursos let's setup the selected package which provides
@@ -214,45 +215,57 @@ I like visual-line mode so let's use that
 
      #+BEGIN_SRC emacs-lisp :tangle yes
        (use-package selected
-	 :diminish selected-minor-mode
-	 :bind (:map selected-keymap
-		     ("q" . selected-off)
-		     ("u" . upcase-region)
-		     ("d" . downcase-region)
-		     ("w" . count-words-region))
-	 :config
-	 (selected-global-mode 1))
+         :diminish selected-minor-mode
+         :bind (:map selected-keymap
+                     ("q" . selected-off)
+                     ("u" . upcase-region)
+                     ("d" . downcase-region)
+                     ("w" . count-words-region)))
+
+       (selected-global-mode 1)
      #+END_SRC
+
      #+BEGIN_SRC emacs-lisp :tangle yes
        (use-package multiple-cursors
-	 :bind (("C-c m a" . mc/edit-beginnings-of-lines)
-		("C-c m e" . mc/edit-ends-of-lines)
-		("C-c m W" . mc/mark-all-words-like-this)
-		("C-c m S" . mc/mark-all-symbols-like-this)
-		("C-c m n" . mc/mark-next-like-this))
-	 :bind (:map selected-keymap
-		     ("e"   . mc/edit-lines)
-		     ("n"   . mc/mark-next-like-this)
-		     ("<"   . mc/unmark-next-like-this)
-		     ("C->" . mc/skip-to-next-like-this)
-		     ("p"   . mc/mark-previous-like-this)
-		     (">"   . mc/unmark-previous-like-this)
-		     ("C-<" . mc/skip-to-previous-like-this)
-		     ("s"   . mc/mark-next-symbol-like-this)
-		     ("S"   . mc/mark-previous-symbol-like-this)
-		     ("w"   . mc/mark-next-word-like-this)
-		     ("W"   . mc/mark-previous-word-like-this)))
+         :bind (("C-c m a" . mc/edit-beginnings-of-lines)
+                ("C-c m e" . mc/edit-ends-of-lines)
+                ("C-c m W" . mc/mark-all-words-like-this)
+                ("C-c m S" . mc/mark-all-symbols-like-this)
+                ("C-c m n" . mc/mark-next-like-this))
+         :bind (:map selected-keymap
+                     ("e"   . mc/edit-lines)
+                     ("n"   . mc/mark-next-like-this)
+                     ("<"   . mc/unmark-next-like-this)
+                     ("C->" . mc/skip-to-next-like-this)
+                     ("p"   . mc/mark-previous-like-this)
+                     (">"   . mc/unmark-previous-like-this)
+                     ("C-<" . mc/skip-to-previous-like-this)
+                     ("s"   . mc/mark-next-symbol-like-this)
+                     ("S"   . mc/mark-previous-symbol-like-this)
+                     ("w"   . mc/mark-next-word-like-this)
+                     ("W"   . mc/mark-previous-word-like-this)))
+     #+END_SRC
+**** Indenting
+     #+BEGIN_SRC emacs-lisp :tangle yes
+     (setq indent-tabs-mode nil)
+     #+END_SRC
+     I saw someone use the =aggressive-indent= package and wanted to try it out.
+     #+BEGIN_SRC emacs-lisp :tangle yes
+       (use-package aggressive-indent
+         :diminish
+         :config
+         (global-aggressive-indent-mode 1))
      #+END_SRC
 **** Undoing
      Undo tree let's us visually see what we are undoing in a nicer way.
      #+BEGIN_SRC emacs-lisp :tangle yes
        (use-package undo-tree
-	 :diminish undo-tree-mode
-	 :config
-	 (progn
-	   (global-undo-tree-mode)
-	   (setq undo-tree-visualizer-timestamps t)
-	   (setq undo-tree-visualizer-diff t)))
+         :diminish undo-tree-mode
+         :config
+         (progn
+           (global-undo-tree-mode)
+           (setq undo-tree-visualizer-timestamps t)
+           (setq undo-tree-visualizer-diff t)))
      #+END_SRC
 **** General keymappings
      Set some general keymappings up.
@@ -269,57 +282,59 @@ I like visual-line mode so let's use that
     The =ora-company-number= comes from [[http://oremacs.com/2017/12/27/company-numbers/][oremacs]].
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package company
-	:diminish
-	:commands (company-mode)
-	:config
-	(defun ora-company-number ()
-	  "Forward to `company-complete-number'.
-	Unless the number is potentially part of the candidate.
-	In that case, insert the number."
-	  (interactive)
-	  (let* ((k (this-command-keys))
-		 (re (concat "^" company-prefix k)))
-	    (if (cl-find-if (lambda (s) (string-match re s))
-			    company-candidates)
-		(self-insert-command 1)
-	      (company-complete-number (string-to-number k)))))
+        :diminish
+        :commands (company-mode)
+        :config
+        (progn
+          (setq company-show-numbers t)
+          (defun ora-company-number ()
+              "Forward to `company-complete-number'.
+        Unless the number is potentially part of the candidate.
+        In that case, insert the number."
+              (interactive)
+              (let* ((k (this-command-keys))
+                     (re (concat "^" company-prefix k)))
+                (if (cl-find-if (lambda (s) (string-match re s))
+                                company-candidates)
+                    (self-insert-command 1)
+                  (company-complete-number (string-to-number k)))))
 
-	(let ((map company-active-map))
-	  (mapc
-	   (lambda (x)
-	     (define-key map (format "%d" x) 'ora-company-number))
-	   (number-sequence 0 9))
-	  (define-key map " " (lambda ()
-				(interactive)
-				(company-abort)
-				(self-insert-command 1))))
-	(global-company-mode 1))
+          (let ((map company-active-map))
+            (mapc
+             (lambda (x)
+               (define-key map (format "%d" x) 'ora-company-number))
+             (number-sequence 0 9))
+            (define-key map " " (lambda ()
+                                  (interactive)
+                                  (company-abort)
+                                  (self-insert-command 1)))))
+        (global-company-mode 1))
     #+END_SRC
 *** Snippets
     Again for me there is no other than yasnippet!
 
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package yasnippet
-	:after prog-mode
-	:diminish yas-minor-mode
-	:init (yas-global-mode)
-	:bind (("C-c y d" . yas-load-directory)
-	       ("C-c y i" . yas-insert-snippet)
-	       ("C-c y f" . yas-visit-snippet-file)
-	       ("C-c y n" . yas-new-snippet)
-	       ("C-c y t" . yas-tryout-snippet)
-	       ("C-c y g" . yas/global-mode)
-	       ("C-c y r" . yas-reload-all))
-	:mode ("/\\.emacs\\.d/snippets/" . snippet-mode)
-	:config
-	(yas-load-directory (emacs-path "snippets"))
-	(yas-global-mode 1))
+        :after prog-mode
+        :diminish yas-minor-mode
+        :init (yas-global-mode)
+        :bind (("C-c y d" . yas-load-directory)
+               ("C-c y i" . yas-insert-snippet)
+               ("C-c y f" . yas-visit-snippet-file)
+               ("C-c y n" . yas-new-snippet)
+               ("C-c y t" . yas-tryout-snippet)
+               ("C-c y g" . yas/global-mode)
+               ("C-c y r" . yas-reload-all))
+        :mode ("/\\.emacs\\.d/snippets/" . snippet-mode)
+        :config
+        (yas-load-directory (emacs-path "snippets"))
+        (yas-global-mode 1))
     #+END_SRC
 *** Flycheck
     Finally we install flycheck for on the fly error checking.
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package flycheck
-	:init (global-flycheck-mode))
+        :init (global-flycheck-mode))
     #+END_SRC
 ** Helm
    Helm gives super nice completion and narrowing with fuzzy search.
@@ -329,26 +344,26 @@ I like visual-line mode so let's use that
        :diminish helm-mode
        :init
        (progn
-	 (require 'helm-config)
-	 (setq helm-candidate-number-limit 100
-	       helm-idle-delay 0.0
-	       helm-input-idle-delay 0.01
-	       helm-quick-update t
-	       helm-ff-skip-boring-files t
-	       helm-M-x-requires-pattern nil)
-	 (helm-mode))
+         (require 'helm-config)
+         (setq helm-candidate-number-limit 100
+               helm-idle-delay 0.0
+               helm-input-idle-delay 0.01
+               helm-quick-update t
+               helm-ff-skip-boring-files t
+               helm-M-x-requires-pattern nil)
+         (helm-mode))
        :bind (("C-c h"   . helm-mini)
-	      ("C-h a"   . helm-apropos)
-	      ("C-x C-b" . helm-buffers-list)
-	      ("C-x b"   . helm-buffers-list)
-	      ("M-y"     . helm-show-kill-ring)
-	      ("M-x"     . helm-M-x)
-	      ("C-x c o" . helm-occur)
-	      ("C-x c s" . helm-swoop)
-	      ("C-x c y" . helm-yas-complete)
-	      ("C-x c Y" . helm-yas-create-snippet-on-region)
-	      ("C-x C-f" . helm-find-files)
-	      ("C-x f"   . helm-mini)))
+              ("C-h a"   . helm-apropos)
+              ("C-x C-b" . helm-buffers-list)
+              ("C-x b"   . helm-buffers-list)
+              ("M-y"     . helm-show-kill-ring)
+              ("M-x"     . helm-M-x)
+              ("C-x c o" . helm-occur)
+              ("C-x c s" . helm-swoop)
+              ("C-x c y" . helm-yas-complete)
+              ("C-x c Y" . helm-yas-create-snippet-on-region)
+              ("C-x C-f" . helm-for-files)
+              ("C-x f"   . helm-mini)))
 
      (ido-mode -1)
    #+END_SRC
@@ -362,14 +377,16 @@ I like visual-line mode so let's use that
    #+BEGIN_SRC emacs-lisp :tangle yes
      (use-package projectile
        :diminish projectile-mode
+       :bind ("C-c TAB" . projectile-find-other-file)
        :config
        (progn
-	 (setq projectile-keymap-prefix (kbd "C-c p")
-	       projectile-completion-system 'default
-	       projectile-enable-caching t
-	       projectile-files-cache-expire 3600 ;; Let's see if this works well
-	       projectile-indexing-method 'alien)
-	 (add-to-list 'projectile-globally-ignored-directories "node-modules"))
+         (setq projectile-keymap-prefix (kbd "C-c p")
+               projectile-completion-system 'default
+               projectile-enable-caching t
+               projectile-indexing-method 'alien)
+         (add-to-list 'projectile-globally-ignored-directories "node-modules")
+         (add-to-list 'projectile-globally-ignored-directories "_build")
+         (add-to-list 'projectile-globally-ignored-directories "deps"))
        (projectile-global-mode))
 
      (use-package helm-projectile)
@@ -379,50 +396,50 @@ I like visual-line mode so let's use that
     Avy mode allows me to jump around a bit more efficiently.
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package avy
-	:bind (("C-c j c" . avy-goto-char-timer)
-	       ("C-c j s" . avy-goto-char)
-	       ("C-c j w" . avy-goto-word-1)
-	       ("C-c j l" . avy-goto-line))
-	:config
-	(avy-setup-default))
+        :bind (("C-c j c" . avy-goto-char-timer)
+               ("C-c j s" . avy-goto-char)
+               ("C-c j w" . avy-goto-word-1)
+               ("C-c j l" . avy-goto-line))
+        :config
+        (avy-setup-default))
     #+END_SRC
 *** Switching windows
     I used to use the =switch-window= package but I'm currently trying out =ace-window=.
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package ace-window
-	:bind (("M-o" . ace-window))
-	:config
-	(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+        :bind (("M-o" . ace-window))
+        :config
+        (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
     #+END_SRC
 ** Programming Languages
 *** LISP
     Paredit paredit paredit.
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package paredit
-	:config
-	(progn
-	  (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-	  (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-	  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-	  (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-	  (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-	  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)))
+        :config
+        (progn
+          (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+          (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+          (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+          (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+          (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+          (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)))
 #+END_SRC
 **** Emacs lisp
      Let's use eldoc for all that sweet elisp documentation.
      #+BEGIN_SRC emacs-lisp
        (use-package "eldoc"
-	 :diminish eldoc-mode
-	 :commands turn-on-eldoc-mode
-	 :defer t
-	 :init
-	 (progn
-	   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
-	   (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
-	   (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)
-	   (eldoc-add-command
-	    'paredit-backward-delete
-	    'paredit-close-round)))
+         :diminish eldoc-mode
+         :commands turn-on-eldoc-mode
+         :defer t
+         :init
+         (progn
+           (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+           (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
+           (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)
+           (eldoc-add-command
+            'paredit-backward-delete
+            'paredit-close-round)))
 #+END_SRC
 *** Elixir
     My new personal web setup is Elixir + Phoenix + Typescript.
@@ -435,8 +452,8 @@ I like visual-line mode so let's use that
     to be available globally so remember to install that!
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package elpy
-	:init
-	(elpy-enable))
+        :init
+        (elpy-enable))
     #+END_SRC
 *** JavaScript
     One of the main programming languages at work so need to be slick.
@@ -445,14 +462,14 @@ I like visual-line mode so let's use that
       (use-package js2-refactor)
       (use-package xref-js2)
       (use-package js2-mode
-	:mode "\\.js\\'"
-	:init
-	(add-hook 'js2-mode-hook #'js2-refactor-mode)
-	(add-hook 'js2-mode-hook (lambda ()
-				   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-	(js2r-add-keybindings-with-prefix "C-c C-r")
-	:bind (:map js2-mode-map
-		    ("C-k" . js2r-kill)))
+        :mode "\\.js\\'"
+        :init
+        (add-hook 'js2-mode-hook #'js2-refactor-mode)
+        (add-hook 'js2-mode-hook (lambda ()
+                                   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+        (js2r-add-keybindings-with-prefix "C-c C-r")
+        :bind (:map js2-mode-map
+                    ("C-k" . js2r-kill)))
 
 
       (define-key js2-mode-map (kbd "M-.") nil)
@@ -460,50 +477,50 @@ I like visual-line mode so let's use that
     #+END_SRC
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package indium
-	:config
-	(add-hook 'js2-mode-hook #'indium-interaction-mode))
+        :config
+        (add-hook 'js2-mode-hook #'indium-interaction-mode))
     #+END_SRC
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package json-mode
-	:mode "\\.json\\'")
+        :mode "\\.json\\'")
     #+END_SRC
 *** Typescript
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package tide
-	:mode "\\.ts\\'"
-	:config
-	(progn
-	  (tide-setup)
-	  (tide-hl-identifier-mode t))
-	(add-hook 'typescript-mode-hook #'setup-tide-mode))
+        :mode "\\.ts\\'"
+        :config
+        (progn
+          (tide-setup)
+          (tide-hl-identifier-mode t))
+        (add-hook 'typescript-mode-hook #'setup-tide-mode))
     #+END_SRC
 *** Web
     Web mode works for now it has some rough edges.
     #+BEGIN_SRC emacs-lisp :tangle yes
-	(use-package web-mode
-	  :init (add-hook 'web-mode-hook
-			  (lambda ()
-			    (setq web-mode-markup-indent-offset 2)
-			    (setq web-mode-css-indent-offset 2)
-			    (setq web-mode-code-indent-offset 2))))
+        (use-package web-mode
+          :init (add-hook 'web-mode-hook
+                          (lambda ()
+                            (setq web-mode-markup-indent-offset 2)
+                            (setq web-mode-css-indent-offset 2)
+                            (setq web-mode-code-indent-offset 2))))
 
-	(add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
-	(add-to-list 'auto-mode-alist '("\\.styl\\'" .web-mode))
+        (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
+        (add-to-list 'auto-mode-alist '("\\.styl\\'" .web-mode))
     #+END_SRC
 ** Emacs Calc
    I've been using calc more and more for calculations and it's truly great.
    #+BEGIN_SRC emacs-lisp :tangle yes
      (setq math-additional-units
       '((TiB   "1024 * GiB" "Terra Byte")
-	(GiB   "1024 * MiB" "Giga Byte")
-	(MiB   "1024 * KiB" "Mega Byte")
-	(KiB   "1024 * B"   "Kilo Byte")
-	(B nil "Byte")
-	(Tib   "1024 * Gib" "Terra Bit")
-	(Gib   "1024 * Mib" "Giga Bit")
-	(Mib   "1024 * Kib" "Mega Bit")
-	(Kib   "1024 * b"   "Kilo Bit")
-	(b     "B / 8"      "Bit")))
+        (GiB   "1024 * MiB" "Giga Byte")
+        (MiB   "1024 * KiB" "Mega Byte")
+        (KiB   "1024 * B"   "Kilo Byte")
+        (B nil "Byte")
+        (Tib   "1024 * Gib" "Terra Bit")
+        (Gib   "1024 * Mib" "Giga Bit")
+        (Mib   "1024 * Kib" "Mega Bit")
+        (Kib   "1024 * b"   "Kilo Bit")
+        (b     "B / 8"      "Bit")))
      (setq math-units-table nil)
    #+END_SRC
 ** Magit
@@ -511,25 +528,28 @@ I like visual-line mode so let's use that
    #+BEGIN_SRC emacs-lisp :tangle yes
      (use-package magit
        :bind (("C-c v s" . magit-status)
-	      ("C-c v b" . magit-blame)
-	      ("C-c v c" . magit-branch-and-checkout)
-	      ("C-c v l" . magit-log)
-	      ("C-c v o" . magit-checkout)
-	      ("C-c v p" . magit-pull)))
+              ("C-c v b" . magit-blame)
+              ("C-c v c" . magit-branch-and-checkout)
+              ("C-c v l" . magit-log)
+              ("C-c v o" . magit-checkout)
+              ("C-c v p" . magit-pull)
+              ("C-c v i" . magit-init)))
    #+END_SRC
 ** Org
 Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndStates][norang]]s configuration. I still have some cleanup to do but it suits me for now.
 #+BEGIN_SRC emacs-lisp :tangle yes
   (require 'org)
   (setq org-directory "~/.emacs.d/org"
-	org-default-notes-file "~/.emacs.d/org/tasks/refile.org"
-	org-log-done 'time
-	org-use-fast-todo-selection t
-	org-treat-S-cursor-todo-selection-as-state-change nil)
-    (setq org-agenda-files '("~/.emacs.d/org/tasks"
-			     "~/.emacs.d/org/refile.org"))
+        org-default-notes-file "~/.emacs.d/org/tasks/refile.org"
+        org-log-done 'time
+        org-use-fast-todo-selection t
+        org-treat-S-cursor-todo-selection-as-state-change nil)
+    (setq org-agenda-files '("~/.emacs.d/org/tasks")
   (setq org-log-into-drawer "LOGBOOK")
   (setq org-clock-intro-drawer 1)
+
+  (global-set-key (kbd "C-c c") 'org-capture)
+  (global-set-key (kbd "C-c a") 'org-agenda)
 #+END_SRC
 *** Org-todo
 **** Keywords states
@@ -538,33 +558,33 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
 
      #+BEGIN_SRC emacs-lisp :tangle yes
        (setq org-todo-keywords
-	     '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-	       (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")
-	       (sequence "Not Read" "|" "Read")))
+             '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+               (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")
+               (sequence "Not Read" "|" "Read")))
 
        (setq org-todo-keyword-faces
-	     '(("TODO"      :foreground "red"     :weight bold)
-	       ("NEXT"      :foreground "blue"    :weight bold)
-	       ("DONE"      :foreground "green"   :weight bold)
-	       ("WAITING"   :foreground "orange"  :weight bold)
-	       ("HOLD"      :foreground "magenta" :weight bold)
-	       ("CANCELLED" :foreground "green"   :weight bold)))
+             '(("TODO"      :foreground "red"     :weight bold)
+               ("NEXT"      :foreground "blue"    :weight bold)
+               ("DONE"      :foreground "green"   :weight bold)
+               ("WAITING"   :foreground "orange"  :weight bold)
+               ("HOLD"      :foreground "magenta" :weight bold)
+               ("CANCELLED" :foreground "green"   :weight bold)))
      #+END_SRC
 **** State triggers
      Tagging tasks when we do certain state changes is done to be able to filter in agenda.
      #+BEGIN_SRC emacs-lisp :tangle yes
        (setq org-tood-state-tags-triggers
-	     '(("CANCELLED" ("CANCELLED" . t))
-	       ("WAITING"   ("WAITING" . t))
-	       ("HOLD"      ("WAITING") ("HOLD" . t))
-	       ("TODO"      ("WAITING") ("CANCELLED") ("HOLD"))
-	       ("NEXT"      ("WAITING") ("CANCELLED") ("HOLD"))
-	       ("DONE"      ("WAITING") ("CANCELLED") ("HOLD"))))
+             '(("CANCELLED" ("CANCELLED" . t))
+               ("WAITING"   ("WAITING" . t))
+               ("HOLD"      ("WAITING") ("HOLD" . t))
+               ("TODO"      ("WAITING") ("CANCELLED") ("HOLD"))
+               ("NEXT"      ("WAITING") ("CANCELLED") ("HOLD"))
+               ("DONE"      ("WAITING") ("CANCELLED") ("HOLD"))))
      #+END_SRC
 **** Refiling
      #+BEGIN_SRC emacs-lisp :tangle yes
        (setq org-refile-targets '((nil :maxlevel . 9)
-				  (org-agenda-files :maxlevel . 9)))
+                                  (org-agenda-files :maxlevel . 9)))
        (setq org-refile-use-outline-path t)
        (setq org-refile-allow-creating-parent-nodes (quote confirm))
        (setq org-completion-use-ido t)
@@ -573,34 +593,34 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
        (setq org-indirect-buffer-display 'current-window)
 
        (defun refile/verify-refile-target ()
-	 "Exclude todo keywords with a done state from refile targets"
-	 (not (member (nth 2 (org-heading-components)) org-done-keywords)))
+         "Exclude todo keywords with a done state from refile targets"
+         (not (member (nth 2 (org-heading-components)) org-done-keywords)))
        (setq org-refile-target-verify-function 'refile/verify-refile-target)
      #+END_SRC
 *** Capture templates
     #+BEGIN_SRC emacs-lisp :tangle yes
       (setq org-capture-templates
-	      (quote (("t"
-		       "todo"
-		       entry
-		       (file "~/.emacs.d/org/tasks/refile.org")
-		       "* TODO %? %^g\n%U\n%a\n"
-		       :clock-in t
-		       :clock-resume t)
-		      ("j"
-		       "Journal"
-		       entry
-		       (file+datetree "~/.emacs.d/org/notes/journal.org")
-		       "* %?\n%U\n"
-		       :clock-in t
-		       :clock-resume t)
-		      ("c"
-		       "Code Snippet"
-		       entry
-		       (file "~/.emacs.d/org/snippets.org")
-		       "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
-		       :clock-in t
-		       :clock-resume t))))
+              (quote (("t"
+                       "todo"
+                       entry
+                       (file "~/.emacs.d/org/tasks/refile.org")
+                       "* TODO %? %^g\n%U\n%a\n"
+                       :clock-in t
+                       :clock-resume t)
+                      ("j"
+                       "Journal"
+                       entry
+                       (file+datetree "~/.emacs.d/org/notes/journal.org")
+                       "* %?\n%U\n"
+                       :clock-in t
+                       :clock-resume t)
+                      ("c"
+                       "Code Snippet"
+                       entry
+                       (file "~/.emacs.d/org/snippets.org")
+                       "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
+                       :clock-in t
+                       :clock-resume t))))
     #+END_SRC
 *** Org Agenda
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -612,77 +632,77 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
 
   ;; Custom agenda command definitions
   (setq org-agenda-custom-commands
-	(quote (("N" "Notes" tags "NOTE"
-		 ((org-agenda-overriding-header "Notes")
-		  (org-tags-match-list-sublevels t)))
-		("h" "Habits" tags-todo "STYLE=\"habit\""
-		 ((org-agenda-overriding-header "Habits")
-		  (org-agenda-sorting-strategy
-		   '(todo-state-down effort-up category-keep))))
-		(" " "Agenda"
-		 ((agenda "" nil)
-		  (tags "REFILE"
-			((org-agenda-overriding-header "Tasks to Refile")
-			 (org-tags-match-list-sublevels nil)))
-		  (tags-todo "-CANCELLED/!"
-			     ((org-agenda-overriding-header "Stuck Projects")
-			      (org-agenda-skip-function 'bh/skip-non-stuck-projects)
-			      (org-agenda-sorting-strategy
-			       '(category-keep))))
-		  (tags-todo "-HOLD-CANCELLED/!"
-			     ((org-agenda-overriding-header "Projects")
-			      (org-agenda-skip-function 'bh/skip-non-projects)
-			      (org-tags-match-list-sublevels 'indented)
-			      (org-agenda-sorting-strategy
-			       '(category-keep))))
-		  (tags-todo "-CANCELLED/!NEXT"
-			     ((org-agenda-overriding-header (concat "Project Next Tasks"
-								    (if bh/hide-scheduled-and-waiting-next-tasks
-									""
-								      " (including WAITING and SCHEDULED tasks)")))
-			      (org-agenda-skip-function 'bh/skip-projects-and-habits-and-single-tasks)
-			      (org-tags-match-list-sublevels t)
-			      (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-sorting-strategy
-			       '(todo-state-down effort-up category-keep))))
-		  (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
-			     ((org-agenda-overriding-header (concat "Project Subtasks"
-								    (if bh/hide-scheduled-and-waiting-next-tasks
-									""
-								      " (including WAITING and SCHEDULED tasks)")))
-			      (org-agenda-skip-function 'bh/skip-non-project-tasks)
-			      (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-sorting-strategy
-			       '(category-keep))))
-		  (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
-			     ((org-agenda-overriding-header (concat "Standalone Tasks"
-								    (if bh/hide-scheduled-and-waiting-next-tasks
-									""
-								      " (including WAITING and SCHEDULED tasks)")))
-			      (org-agenda-skip-function 'bh/skip-project-tasks)
-			      (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-sorting-strategy
-			       '(category-keep))))
-		  (tags-todo "-CANCELLED+WAITING|HOLD/!"
-			     ((org-agenda-overriding-header (concat "Waiting and Postponed Tasks"
-								    (if bh/hide-scheduled-and-waiting-next-tasks
-									""
-								      " (including WAITING and SCHEDULED tasks)")))
-			      (org-agenda-skip-function 'bh/skip-non-tasks)
-			      (org-tags-match-list-sublevels nil)
-			      (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-			      (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)))
-		  (tags "-REFILE/"
-			((org-agenda-overriding-header "Tasks to Archive")
-			 (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
-			 (org-tags-match-list-sublevels nil))))
-		 nil))))
+        (quote (("N" "Notes" tags "NOTE"
+                 ((org-agenda-overriding-header "Notes")
+                  (org-tags-match-list-sublevels t)))
+                ("h" "Habits" tags-todo "STYLE=\"habit\""
+                 ((org-agenda-overriding-header "Habits")
+                  (org-agenda-sorting-strategy
+                   '(todo-state-down effort-up category-keep))))
+                (" " "Agenda"
+                 ((agenda "" nil)
+                  (tags "REFILE"
+                        ((org-agenda-overriding-header "Tasks to Refile")
+                         (org-tags-match-list-sublevels nil)))
+                  (tags-todo "-CANCELLED/!"
+                             ((org-agenda-overriding-header "Stuck Projects")
+                              (org-agenda-skip-function 'bh/skip-non-stuck-projects)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))))
+                  (tags-todo "-HOLD-CANCELLED/!"
+                             ((org-agenda-overriding-header "Projects")
+                              (org-agenda-skip-function 'bh/skip-non-projects)
+                              (org-tags-match-list-sublevels 'indented)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))))
+                  (tags-todo "-CANCELLED/!NEXT"
+                             ((org-agenda-overriding-header (concat "Project Next Tasks"
+                                                                    (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                        ""
+                                                                      " (including WAITING and SCHEDULED tasks)")))
+                              (org-agenda-skip-function 'bh/skip-projects-and-habits-and-single-tasks)
+                              (org-tags-match-list-sublevels t)
+                              (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-sorting-strategy
+                               '(todo-state-down effort-up category-keep))))
+                  (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
+                             ((org-agenda-overriding-header (concat "Project Subtasks"
+                                                                    (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                        ""
+                                                                      " (including WAITING and SCHEDULED tasks)")))
+                              (org-agenda-skip-function 'bh/skip-non-project-tasks)
+                              (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))))
+                  (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
+                             ((org-agenda-overriding-header (concat "Standalone Tasks"
+                                                                    (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                        ""
+                                                                      " (including WAITING and SCHEDULED tasks)")))
+                              (org-agenda-skip-function 'bh/skip-project-tasks)
+                              (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))))
+                  (tags-todo "-CANCELLED+WAITING|HOLD/!"
+                             ((org-agenda-overriding-header (concat "Waiting and Postponed Tasks"
+                                                                    (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                        ""
+                                                                      " (including WAITING and SCHEDULED tasks)")))
+                              (org-agenda-skip-function 'bh/skip-non-tasks)
+                              (org-tags-match-list-sublevels nil)
+                              (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)))
+                  (tags "-REFILE/"
+                        ((org-agenda-overriding-header "Tasks to Archive")
+                         (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
+                         (org-tags-match-list-sublevels nil))))
+                 nil))))
 
 #+END_SRC
 
@@ -692,59 +712,59 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (save-restriction
       (widen)
       (let ((has-subtask)
-	    (subtree-end (save-excursion (org-end-of-subtree t)))
-	    (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
-	(save-excursion
-	  (forward-line 1)
-	  (while (and (not has-subtask)
-		      (< (point) subtree-end)
-		      (re-search-forward "^\*+ " subtree-end t))
-	    (when (member (org-get-todo-state) org-todo-keywords-1)
-	      (setq has-subtask t))))
-	(and is-a-task has-subtask))))
+            (subtree-end (save-excursion (org-end-of-subtree t)))
+            (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+        (save-excursion
+          (forward-line 1)
+          (while (and (not has-subtask)
+                      (< (point) subtree-end)
+                      (re-search-forward "^\*+ " subtree-end t))
+            (when (member (org-get-todo-state) org-todo-keywords-1)
+              (setq has-subtask t))))
+        (and is-a-task has-subtask))))
 
   (defun bh/is-project-subtree-p ()
     "Any task with a todo keyword that is in a project subtree.
   Callers of this function already widen the buffer view."
     (let ((task (save-excursion (org-back-to-heading 'invisible-ok)
-				(point))))
+                                (point))))
       (save-excursion
-	(bh/find-project-task)
-	(if (equal (point) task)
-	    nil
-	  t))))
+        (bh/find-project-task)
+        (if (equal (point) task)
+            nil
+          t))))
 
   (defun bh/is-task-p ()
     "Any task with a todo keyword and no subtask"
     (save-restriction
       (widen)
       (let ((has-subtask)
-	    (subtree-end (save-excursion (org-end-of-subtree t)))
-	    (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
-	(save-excursion
-	  (forward-line 1)
-	  (while (and (not has-subtask)
-		      (< (point) subtree-end)
-		      (re-search-forward "^\*+ " subtree-end t))
-	    (when (member (org-get-todo-state) org-todo-keywords-1)
-	      (setq has-subtask t))))
-	(and is-a-task (not has-subtask)))))
+            (subtree-end (save-excursion (org-end-of-subtree t)))
+            (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+        (save-excursion
+          (forward-line 1)
+          (while (and (not has-subtask)
+                      (< (point) subtree-end)
+                      (re-search-forward "^\*+ " subtree-end t))
+            (when (member (org-get-todo-state) org-todo-keywords-1)
+              (setq has-subtask t))))
+        (and is-a-task (not has-subtask)))))
 
   (defun bh/is-subproject-p ()
     "Any task which is a subtask of another project"
     (let ((is-subproject)
-	  (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
+          (is-a-task (member (nth 2 (org-heading-components)) org-todo-keywords-1)))
       (save-excursion
-	(while (and (not is-subproject) (org-up-heading-safe))
-	  (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-	    (setq is-subproject t))))
+        (while (and (not is-subproject) (org-up-heading-safe))
+          (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
+            (setq is-subproject t))))
       (and is-a-task is-subproject)))
 
   (defun bh/list-sublevels-for-projects-indented ()
     "Set org-tags-match-list-sublevels so when restricted to a subtree we list all subtasks.
     This is normally used by skipping functions where this variable is already local to the agenda."
     (if (marker-buffer org-agenda-restrict-begin)
-	(setq org-tags-match-list-sublevels 'indented)
+        (setq org-tags-match-list-sublevels 'indented)
       (setq org-tags-match-list-sublevels nil))
     nil)
 
@@ -752,7 +772,7 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     "Set org-tags-match-list-sublevels so when restricted to a subtree we list all subtasks.
     This is normally used by skipping functions where this variable is already local to the agenda."
     (if (marker-buffer org-agenda-restrict-begin)
-	(setq org-tags-match-list-sublevels t)
+        (setq org-tags-match-list-sublevels t)
       (setq org-tags-match-list-sublevels nil))
     nil)
 
@@ -770,18 +790,18 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (save-restriction
       (widen)
       (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-	(if (bh/is-project-p)
-	    (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-		   (has-next ))
-	      (save-excursion
-		(forward-line 1)
-		(while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
-		  (unless (member "WAITING" (org-get-tags-at))
-		    (setq has-next t))))
-	      (if has-next
-		  nil
-		next-headline)) ; a stuck project, has subtasks but no next task
-	  nil))))
+        (if (bh/is-project-p)
+            (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+                   (has-next ))
+              (save-excursion
+                (forward-line 1)
+                (while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
+                  (unless (member "WAITING" (org-get-tags-at))
+                    (setq has-next t))))
+              (if has-next
+                  nil
+                next-headline)) ; a stuck project, has subtasks but no next task
+          nil))))
 
   (defun bh/skip-non-stuck-projects ()
     "Skip trees that are not stuck projects"
@@ -789,33 +809,33 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (save-restriction
       (widen)
       (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-	(if (bh/is-project-p)
-	    (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-		   (has-next ))
-	      (save-excursion
-		(forward-line 1)
-		(while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
-		  (unless (member "WAITING" (org-get-tags-at))
-		    (setq has-next t))))
-	      (if has-next
-		  next-headline
-		nil)) ; a stuck project, has subtasks but no next task
-	  next-headline))))
+        (if (bh/is-project-p)
+            (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
+                   (has-next ))
+              (save-excursion
+                (forward-line 1)
+                (while (and (not has-next) (< (point) subtree-end) (re-search-forward "^\\*+ NEXT " subtree-end t))
+                  (unless (member "WAITING" (org-get-tags-at))
+                    (setq has-next t))))
+              (if has-next
+                  next-headline
+                nil)) ; a stuck project, has subtasks but no next task
+          next-headline))))
 
   (defun bh/skip-non-projects ()
     "Skip trees that are not projects"
     ;; (bh/list-sublevels-for-projects-indented)
     (if (save-excursion (bh/skip-non-stuck-projects))
-	(save-restriction
-	  (widen)
-	  (let ((subtree-end (save-excursion (org-end-of-subtree t))))
-	    (cond
-	     ((bh/is-project-p)
-	      nil)
-	     ((and (bh/is-project-subtree-p) (not (bh/is-task-p)))
-	      nil)
-	     (t
-	      subtree-end))))
+        (save-restriction
+          (widen)
+          (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+            (cond
+             ((bh/is-project-p)
+              nil)
+             ((and (bh/is-project-subtree-p) (not (bh/is-task-p)))
+              nil)
+             (t
+              subtree-end))))
       (save-excursion (org-end-of-subtree t))))
 
   (defun bh/skip-non-tasks ()
@@ -824,38 +844,38 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (save-restriction
       (widen)
       (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-	(cond
-	 ((bh/is-task-p)
-	  nil)
-	 (t
-	  next-headline)))))
+        (cond
+         ((bh/is-task-p)
+          nil)
+         (t
+          next-headline)))))
 
   (defun bh/skip-project-trees-and-habits ()
     "Skip trees that are projects"
     (save-restriction
       (widen)
       (let ((subtree-end (save-excursion (org-end-of-subtree t))))
-	(cond
-	 ((bh/is-project-p)
-	  subtree-end)
-	 (t
-	  nil)))))
+        (cond
+         ((bh/is-project-p)
+          subtree-end)
+         (t
+          nil)))))
 
   (defun bh/skip-projects-and-habits-and-single-tasks ()
     "Skip trees that are projects, tasks that are habits, single non-project tasks"
     (save-restriction
       (widen)
       (let ((next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-	(cond
-	 ((and bh/hide-scheduled-and-waiting-next-tasks
-	       (member "WAITING" (org-get-tags-at)))
-	  next-headline)
-	 ((bh/is-project-p)
-	  next-headline)
-	 ((and (bh/is-task-p) (not (bh/is-project-subtree-p)))
-	  next-headline)
-	 (t
-	  nil)))))
+        (cond
+         ((and bh/hide-scheduled-and-waiting-next-tasks
+               (member "WAITING" (org-get-tags-at)))
+          next-headline)
+         ((bh/is-project-p)
+          next-headline)
+         ((and (bh/is-task-p) (not (bh/is-project-subtree-p)))
+          next-headline)
+         (t
+          nil)))))
 
   (defun bh/skip-project-tasks-maybe ()
     "Show tasks related to the current restriction.
@@ -864,20 +884,20 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (save-restriction
       (widen)
       (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-	     (next-headline (save-excursion (or (outline-next-heading) (point-max))))
-	     (limit-to-project (marker-buffer org-agenda-restrict-begin)))
-	(cond
-	 ((bh/is-project-p)
-	  next-headline)
-	 ((and (not limit-to-project)
-	       (bh/is-project-subtree-p))
-	  subtree-end)
-	 ((and limit-to-project
-	       (bh/is-project-subtree-p)
-	       (member (org-get-todo-state) (list "NEXT")))
-	  subtree-end)
-	 (t
-	  nil)))))
+             (next-headline (save-excursion (or (outline-next-heading) (point-max))))
+             (limit-to-project (marker-buffer org-agenda-restrict-begin)))
+        (cond
+         ((bh/is-project-p)
+          next-headline)
+         ((and (not limit-to-project)
+               (bh/is-project-subtree-p))
+          subtree-end)
+         ((and limit-to-project
+               (bh/is-project-subtree-p)
+               (member (org-get-todo-state) (list "NEXT")))
+          subtree-end)
+         (t
+          nil)))))
 
   (defun bh/skip-project-tasks ()
     "Show non-project tasks.
@@ -885,13 +905,13 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (save-restriction
       (widen)
       (let* ((subtree-end (save-excursion (org-end-of-subtree t))))
-	(cond
-	 ((bh/is-project-p)
-	  subtree-end)
-	 ((bh/is-project-subtree-p)
-	  subtree-end)
-	 (t
-	  nil)))))
+        (cond
+         ((bh/is-project-p)
+          subtree-end)
+         ((bh/is-project-subtree-p)
+          subtree-end)
+         (t
+          nil)))))
 
   (defun bh/skip-non-project-tasks ()
     "Show project tasks.
@@ -899,35 +919,35 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (save-restriction
       (widen)
       (let* ((subtree-end (save-excursion (org-end-of-subtree t)))
-	     (next-headline (save-excursion (or (outline-next-heading) (point-max)))))
-	(cond
-	 ((bh/is-project-p)
-	  next-headline)
-	 ((and (bh/is-project-subtree-p)
-	       (member (org-get-todo-state) (list "NEXT")))
-	  subtree-end)
-	 ((not (bh/is-project-subtree-p))
-	  subtree-end)
-	 (t
-	  nil)))))
+             (next-headline (save-excursion (or (outline-next-heading) (point-max)))))
+        (cond
+         ((bh/is-project-p)
+          next-headline)
+         ((and (bh/is-project-subtree-p)
+               (member (org-get-todo-state) (list "NEXT")))
+          subtree-end)
+         ((not (bh/is-project-subtree-p))
+          subtree-end)
+         (t
+          nil)))))
 
   (defun bh/skip-projects-and-habits ()
     "Skip trees that are projects and tasks that are habits"
     (save-restriction
       (widen)
       (let ((subtree-end (save-excursion (org-end-of-subtree t))))
-	(cond
-	 ((bh/is-project-p)
-	  subtree-end)
-	 (t
-	  nil)))))
+        (cond
+         ((bh/is-project-p)
+          subtree-end)
+         (t
+          nil)))))
 
   (defun bh/skip-non-subprojects ()
     "Skip trees that are not projects"
     (let ((next-headline (save-excursion (outline-next-heading))))
       (if (bh/is-subproject-p)
-	  nil
-	next-headline)))
+          nil
+        next-headline)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -967,22 +987,22 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (when (not (and (boundp 'org-capture-mode) org-capture-mode))
       (cond
        ((and (member (org-get-todo-state) (list "TODO"))
-	     (bh/is-task-p))
-	"NEXT")
+             (bh/is-task-p))
+        "NEXT")
        ((and (member (org-get-todo-state) (list "NEXT"))
-	     (bh/is-project-p))
-	"TODO"))))
+             (bh/is-project-p))
+        "TODO"))))
 
   (defun bh/find-project-task ()
     "Move point to the parent (project) task if any"
     (save-restriction
       (widen)
       (let ((parent-task (save-excursion (org-back-to-heading 'invisible-ok) (point))))
-	(while (org-up-heading-safe)
-	  (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-	    (setq parent-task (point))))
-	(goto-char parent-task)
-	parent-task)))
+        (while (org-up-heading-safe)
+          (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
+            (setq parent-task (point))))
+        (goto-char parent-task)
+        parent-task)))
 
   (defun bh/punch-in (arg)
     "Start continuous clocking and set the default task to the
@@ -991,23 +1011,23 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
     (interactive "p")
     (setq bh/keep-clock-running t)
     (if (equal major-mode 'org-agenda-mode)
-	;;
-	;; We're in the agenda
-	;;
-	(let* ((marker (org-get-at-bol 'org-hd-marker))
-	       (tags (org-with-point-at marker (org-get-tags-at))))
-	  (if (and (eq arg 4) tags)
-	      (org-agenda-clock-in '(16))
-	    (bh/clock-in-organization-task-as-default)))
+        ;;
+        ;; We're in the agenda
+        ;;
+        (let* ((marker (org-get-at-bol 'org-hd-marker))
+               (tags (org-with-point-at marker (org-get-tags-at))))
+          (if (and (eq arg 4) tags)
+              (org-agenda-clock-in '(16))
+            (bh/clock-in-organization-task-as-default)))
       ;;
       ;; We are not in the agenda
       ;;
       (save-restriction
-	(widen)
-	; Find the tags on the current task
-	(if (and (equal major-mode 'org-mode) (not (org-before-first-heading-p)) (eq arg 4))
-	    (org-clock-in '(16))
-	  (bh/clock-in-organization-task-as-default)))))
+        (widen)
+        ; Find the tags on the current task
+        (if (and (equal major-mode 'org-mode) (not (org-before-first-heading-p)) (eq arg 4))
+            (org-clock-in '(16))
+          (bh/clock-in-organization-task-as-default)))))
 
   (defun bh/punch-out ()
     (interactive)
@@ -1019,22 +1039,22 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
   (defun bh/clock-in-default-task ()
     (save-excursion
       (org-with-point-at org-clock-default-task
-	(org-clock-in))))
+        (org-clock-in))))
 
   (defun bh/clock-in-parent-task ()
     "Move point to the parent (project) task if any and clock in"
     (let ((parent-task))
       (save-excursion
-	(save-restriction
-	  (widen)
-	  (while (and (not parent-task) (org-up-heading-safe))
-	    (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
-	      (setq parent-task (point))))
-	  (if parent-task
-	      (org-with-point-at parent-task
-		(org-clock-in))
-	    (when bh/keep-clock-running
-	      (bh/clock-in-default-task)))))))
+        (save-restriction
+          (widen)
+          (while (and (not parent-task) (org-up-heading-safe))
+            (when (member (nth 2 (org-heading-components)) org-todo-keywords-1)
+              (setq parent-task (point))))
+          (if parent-task
+              (org-with-point-at parent-task
+                (org-clock-in))
+            (when bh/keep-clock-running
+              (bh/clock-in-default-task)))))))
 
   (defvar bh/organization-task-id "eb155a82-92b2-4f25-a3c6-0304591af2f9")
 
@@ -1045,10 +1065,11 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
 
   (defun bh/clock-out-maybe ()
     (when (and bh/keep-clock-running
-	       (not org-clock-clocking-in)
-	       (marker-buffer org-clock-default-task)
-	       (not org-clock-resolving-clocks-due-to-idleness))
+               (not org-clock-clocking-in)
+               (marker-buffer org-clock-default-task)
+               (not org-clock-resolving-clocks-due-to-idleness))
       (bh/clock-in-parent-task)))
 
   (add-hook 'org-clock-out-hook 'bh/clock-out-maybe 'append)
 #+END_SRC
+** Email
