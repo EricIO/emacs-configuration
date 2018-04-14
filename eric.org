@@ -3,9 +3,9 @@
 #+STARTUP: showeverything
 
 Inspired by:
-  - [[https://github.com/mm--/dot-emacs/blob/master/jmm-emacs.org][Josh Moller-Mara's configuration]]
-  - [[https://github.com/sachac/.emacs.d/][Sacha Chuas configuration]]
-  - [[https://github.com/dakrone/eos][The Emacs Operating system]]
+- [[https://github.com/mm--/dot-emacs/blob/master/jmm-emacs.org][Josh Moller-Mara's configuration]]
+- [[https://github.com/sachac/.emacs.d/][Sacha Chuas configuration]]
+- [[https://github.com/dakrone/eos][The Emacs Operating system]]
 
 I decided it was time for another half rewrite of my configuration.
 Instead of the init.el file doing the tangle this will now just be handled with =M-x org-babel-tangle= and just symlinked to =~/.emacs.d/init.el=.
@@ -15,7 +15,7 @@ Instead of the init.el file doing the tangle this will now just be handled with 
   :CUSTOM_ID: babel-init
   :END:
 
-<<babel-init>>
+  <<babel-init>>
 
 ** Start up the environment!
 *** Distractions
@@ -192,7 +192,7 @@ I like visual-line mode so let's use that
       (show-paren-mode t)
       (setq show-paren-delay 0)
       (electric-pair-mode t)
-      (setq indent-tabs-mode nil)
+      (setq-default indent-tabs-mode nil)
     #+END_SRC
 
     #+BEGIN_SRC emacs-lisp :tangle yes
@@ -544,7 +544,7 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
         org-log-done 'time
         org-use-fast-todo-selection t
         org-treat-S-cursor-todo-selection-as-state-change nil)
-    (setq org-agenda-files '("~/.emacs.d/org/tasks")
+  (setq org-agenda-files '("~/.emacs.d/org/tasks"))
   (setq org-log-into-drawer "LOGBOOK")
   (setq org-clock-intro-drawer 1)
 
