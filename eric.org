@@ -497,15 +497,16 @@ I like visual-line mode so let's use that
 *** Web
     Web mode works for now it has some rough edges.
     #+BEGIN_SRC emacs-lisp :tangle yes
-        (use-package web-mode
-          :init (add-hook 'web-mode-hook
-                          (lambda ()
-                            (setq web-mode-markup-indent-offset 2)
-                            (setq web-mode-css-indent-offset 2)
-                            (setq web-mode-code-indent-offset 2))))
+      (use-package web-mode
+        :init (add-hook 'web-mode-hook
+                        (lambda ()
+                          (setq web-mode-markup-indent-offset 2)
+                          (setq web-mode-css-indent-offset 2)
+                          (setq web-mode-code-indent-offset 2))))
 
-        (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
-        (add-to-list 'auto-mode-alist '("\\.styl\\'" .web-mode))
+      (add-to-list 'auto-mode-alist '("\\.hbs\\'"  . web-mode))
+      (add-to-list 'auto-mode-alist '("\\.styl\\'" . web-mode))
+      (add-to-list 'auto-mode-alist '("\\.eex\\'"  . web-mode))
     #+END_SRC
 ** Emacs Calc
    I've been using calc more and more for calculations and it's truly great.
