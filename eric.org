@@ -146,7 +146,8 @@ Great now we're ready to get our packages up and running so we can start using o
 *** Fringe and line
 Let's use the native line numbering from emacs 26!
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (display-line-numbers-mode t)
+  (if (fboundp 'display-line-numbers-mode)
+      (display-line-numbers-mode t))
 #+END_SRC
 
 I like visual-line mode so let's use that
@@ -534,6 +535,8 @@ I like visual-line mode so let's use that
               ("C-c v o" . magit-checkout)
               ("C-c v p" . magit-pull)
               ("C-c v i" . magit-init)))
+
+     (setq auto-revert-check-vc-info t)
    #+END_SRC
 ** Org
 Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndStates][norang]]s configuration. I still have some cleanup to do but it suits me for now.
