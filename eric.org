@@ -1145,6 +1145,7 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                "https://jeremykun.com/feed/"
                "https://pagefault.se/atom.xml"
                "https://krebsonsecurity.com/feed/"
-               "https://www.schneier.com/blog/atom.xml")))
+               "https://www.schneier.com/blog/atom.xml"
+               "https://theness.com/neurologicablog/index.php/feed/")))
 
    #+END_SRC
