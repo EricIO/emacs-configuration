@@ -30,6 +30,7 @@ Instead of the init.el file doing the tangle this will now just be handled with 
       (scroll-bar-mode -1)
       (menu-bar-mode -1)
       (tool-bar-mode -1)
+      (global-linum-mode t)
     #+END_SRC
 
     I don't like the blinking cursor. Kill it.
@@ -363,7 +364,8 @@ I like visual-line mode so let's use that
               ("C-x c y" . helm-yas-complete)
               ("C-x c Y" . helm-yas-create-snippet-on-region)
               ("C-x C-f" . helm-for-files)
-              ("C-x f"   . helm-mini)))
+              ("C-x f"   . helm-mini)
+              ("C-x C-f" . helm-find-files)))
 
      (ido-mode -1)
    #+END_SRC
@@ -441,6 +443,8 @@ I like visual-line mode so let's use that
             'paredit-backward-delete
             'paredit-close-round)))
 #+END_SRC
+*** Clojure
+
 *** Elixir
     My new personal web setup is Elixir + Phoenix + Typescript.
 
@@ -508,6 +512,26 @@ I like visual-line mode so let's use that
       (add-to-list 'auto-mode-alist '("\\.styl\\'" . web-mode))
       (add-to-list 'auto-mode-alist '("\\.eex\\'"  . web-mode))
     #+END_SRC
+*** Rust
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package cargo)
+
+  (use-package racer
+    :config
+    (add-hook 'racer-mode-hook #'eldoc-mode)
+    (setq racer-cmd "~/.cargo/bin/racer")
+    (setq racer-rust-src-path "~/programming/github.com/rust-lang/rust/src"))
+
+  (use-package flycheck-rust
+    :config
+    (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+
+  (use-package rust-mode
+    :config
+    (progn
+      (add-hook 'rust-mode-hook 'cargo-minor-mode)
+      (add-hook 'rust-mode-hook #'racer-mode)))
+#+END_SRC
 ** Emacs Calc
    I've been using calc more and more for calculations and it's truly great.
    #+BEGIN_SRC emacs-lisp :tangle yes
@@ -636,11 +660,24 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
         (quote (("N" "Notes" tags "NOTE"
                  ((org-agenda-overriding-header "Notes")
                   (org-tags-match-list-sublevels t)))
-                ("h" "Habits" tags-todo "STYLE=\"habit\""
-                 ((org-agenda-overriding-header "Habits")
-                  (org-agenda-sorting-strategy
-                   '(todo-state-down effort-up category-keep))))
-                (" " "Agenda"
+                ("W" "Work"
+                 ((agenda "" nil)
+                  (tags "+bonniernews+REFILE"
+                        ((org-agenda-overriding-header "Tasks to Refile")
+                         (org-tags-match-list-sublevels nil)))
+                  (tags "+bonniernews-CANCELLED/!NEXT"
+                        ((org-agenda-overriding-header (concat "Project Next Tasks"
+                                                               (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                   ""
+                                                                 " (including WAITING and SCHEDULED tasks)")))
+                         (org-agenda-skip-function 'bh/skip-projects-and-habits-and-single-tasks)
+                         (org-tags-match-list-sublevels t)
+                         (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                         (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                         (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+                         (org-agenda-sorting-strategy
+                          '(todo-state-down effort-up category-keep))))))
+                (" " "Full Agenda"
                  ((agenda "" nil)
                   (tags "REFILE"
                         ((org-agenda-overriding-header "Tasks to Refile")
@@ -1126,9 +1163,13 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                       :count-query "tag:lists/erlang-questions and tag:unread"
                       :key "erl")
                (:name "foss-sthlm"
-                      :query "tag:lists/lists/foss-sthlm and tag:unread"
-                      :count-query "tag:lists/lists/foss-sthlm and tag:unread"
-                      :key "fs"))))
+                      :query "tag:lists/foss-sthlm and tag:unread"
+                      :count-query "tag:lists/foss-sthlm and tag:unread"
+                      :key "os")
+               (:name "git-devel"
+                      :query "tag:lists/git and tag:unread"
+                      :count-query "tag:lists/git and tag:unread"
+                      :key "g"))))
 
    #+END_SRC
 ** RSS
