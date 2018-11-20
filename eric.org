@@ -603,27 +603,34 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
 *** Capture templates
     #+BEGIN_SRC emacs-lisp :tangle yes
       (setq org-capture-templates
-              (quote (("t"
-                       "todo"
-                       entry
-                       (file "~/.emacs.d/org/tasks/refile.org")
-                       "* TODO %? %^g\n%U\n%a\n"
-                       :clock-in t
-                       :clock-resume t)
-                      ("j"
-                       "Journal"
-                       entry
-                       (file+datetree "~/.emacs.d/org/notes/journal.org")
-                       "* %?\n%U\n"
-                       :clock-in t
-                       :clock-resume t)
-                      ("c"
-                       "Code Snippet"
-                       entry
-                       (file "~/.emacs.d/org/snippets.org")
-                       "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
-                       :clock-in t
-                       :clock-resume t))))
+            (quote (("t"
+                     "todo"
+                     entry
+                     (file "~/.emacs.d/org/tasks/refile.org")
+                     "* TODO %? %^g\n%U\n%a\n"
+                     :clock-in t
+                     :clock-resume t)
+                    ("j"
+                     "Journal"
+                     entry
+                     (file+datetree "~/.emacs.d/org/notes/journal.org")
+                     "* %?\n%U\n"
+                     :clock-in t
+                     :clock-resume t)
+                    ("m"
+                     "Meeting Note"
+                     entry
+                     (file "~/.emacs.d/org/notes/refile.org")
+                     "* MEETING with %? :MEETING:\n%U"
+                     :clock-in t
+                     :clock-resume t)
+                    ("c"
+                     "Code Snippet"
+                     entry
+                     (file "~/.emacs.d/org/snippets.org")
+                     "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
+                     :clock-in t
+                     :clock-resume t))))
     #+END_SRC
 *** Org Agenda
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -638,10 +645,6 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
         (quote (("N" "Notes" tags "NOTE"
                  ((org-agenda-overriding-header "Notes")
                   (org-tags-match-list-sublevels t)))
-                ("h" "Habits" tags-todo "STYLE=\"habit\""
-                 ((org-agenda-overriding-header "Habits")
-                  (org-agenda-sorting-strategy
-                   '(todo-state-down effort-up category-keep))))
                 (" " "Agenda"
                  ((agenda "" nil)
                   (tags "REFILE"
