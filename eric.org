@@ -30,6 +30,7 @@ Instead of the init.el file doing the tangle this will now just be handled with 
       (scroll-bar-mode -1)
       (menu-bar-mode -1)
       (tool-bar-mode -1)
+      (global-linum-mode t)
     #+END_SRC
 
     I don't like the blinking cursor. Kill it.
@@ -364,7 +365,8 @@ I like visual-line mode so let's use that
               ("C-x c y" . helm-yas-complete)
               ("C-x c Y" . helm-yas-create-snippet-on-region)
               ("C-x C-f" . helm-for-files)
-              ("C-x f"   . helm-mini)))
+              ("C-x f"   . helm-mini)
+              ("C-x C-f" . helm-find-files)))
 
      (ido-mode -1)
    #+END_SRC
@@ -381,13 +383,13 @@ I like visual-line mode so let's use that
        :bind ("C-c TAB" . projectile-find-other-file)
        :config
        (progn
-         (setq projectile-keymap-prefix (kbd "C-c p")
-               projectile-completion-system 'default
+         (setq projectile-completion-system 'default
                projectile-enable-caching t
                projectile-indexing-method 'alien)
          (add-to-list 'projectile-globally-ignored-directories "node-modules")
          (add-to-list 'projectile-globally-ignored-directories "_build")
-         (add-to-list 'projectile-globally-ignored-directories "deps"))
+         (add-to-list 'projectile-globally-ignored-directories "deps")
+         (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
        (projectile-global-mode))
 
      (use-package helm-projectile)
@@ -442,6 +444,8 @@ I like visual-line mode so let's use that
             'paredit-backward-delete
             'paredit-close-round)))
 #+END_SRC
+*** Clojure
+
 *** Elixir
     My new personal web setup is Elixir + Phoenix + Typescript.
 
@@ -498,16 +502,38 @@ I like visual-line mode so let's use that
 *** Web
     Web mode works for now it has some rough edges.
     #+BEGIN_SRC emacs-lisp :tangle yes
-        (use-package web-mode
-          :init (add-hook 'web-mode-hook
-                          (lambda ()
-                            (setq web-mode-markup-indent-offset 2)
-                            (setq web-mode-css-indent-offset 2)
-                            (setq web-mode-code-indent-offset 2))))
+      (use-package web-mode
+        :init (add-hook 'web-mode-hook
+                        (lambda ()
+                          (setq web-mode-markup-indent-offset 2)
+                          (setq web-mode-css-indent-offset 2)
+                          (setq web-mode-code-indent-offset 2))))
 
-        (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
-        (add-to-list 'auto-mode-alist '("\\.styl\\'" .web-mode))
+      (add-to-list 'auto-mode-alist '("\\.hbs\\'"  . web-mode))
+      (add-to-list 'auto-mode-alist '("\\.styl\\'" . web-mode))
+      (add-to-list 'auto-mode-alist '("\\.eex\\'"  . web-mode))
     #+END_SRC
+*** Rust
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package cargo)
+
+  (use-package racer
+    :config
+    (progn
+      (add-hook 'racer-mode-hook #'eldoc-mode)
+      (setq racer-cmd "~/.cargo/bin/racer")
+      (setq racer-rust-src-path "~/programming/github.com/rust-lang/rust/src")))
+
+  (use-package flycheck-rust
+    :config
+    (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+
+  (use-package rust-mode
+    :config
+    (progn
+      (add-hook 'rust-mode-hook 'cargo-minor-mode)
+      (add-hook 'rust-mode-hook #'racer-mode)))
+#+END_SRC
 ** Emacs Calc
    I've been using calc more and more for calculations and it's truly great.
    #+BEGIN_SRC emacs-lisp :tangle yes
@@ -542,12 +568,20 @@ I like visual-line mode so let's use that
 Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndStates][norang]]s configuration. I still have some cleanup to do but it suits me for now.
 #+BEGIN_SRC emacs-lisp :tangle yes
   (require 'org)
+
   (setq org-directory "~/.emacs.d/org"
-        org-default-notes-file "~/.emacs.d/org/tasks/refile.org"
+        org-default-notes-file "~/.emacs.d/org/refile.org"
         org-log-done 'time
         org-use-fast-todo-selection t
         org-treat-S-cursor-todo-selection-as-state-change nil)
-  (setq org-agenda-files '("~/.emacs.d/org/tasks"))
+
+  (setq org-agenda-files '("~/.emacs.d/org/bonnier.org"
+                           "~/.emacs.d/org/foss.org"
+                           "~/.emacs.d/org/mathom.org"
+                           "~/.emacs.d/org/orgs.org"
+                           "~/.emacs.d/org/personal.org"
+                           "~/.emacs.d/org/refile.org"))
+
   (setq org-log-into-drawer "LOGBOOK")
   (setq org-clock-intro-drawer 1)
 
@@ -562,7 +596,7 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
      #+BEGIN_SRC emacs-lisp :tangle yes
        (setq org-todo-keywords
              '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-               (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")
+               (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "MEETING(m@/!)")
                (sequence "Not Read" "|" "Read")))
 
        (setq org-todo-keyword-faces
@@ -606,29 +640,27 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
             (quote (("t"
                      "todo"
                      entry
-                     (file "~/.emacs.d/org/tasks/refile.org")
+                     (file "~/.emacs.d/org/refile.org")
                      "* TODO %? %^g\n%U\n%a\n"
                      :clock-in t
                      :clock-resume t)
-                    ("j"
-                     "Journal"
-                     entry
-                     (file+datetree "~/.emacs.d/org/notes/journal.org")
-                     "* %?\n%U\n"
-                     :clock-in t
-                     :clock-resume t)
                     ("m"
-                     "Meeting Note"
+                     "meeting"
                      entry
-                     (file "~/.emacs.d/org/notes/refile.org")
+                     (file "~/.emacs.d/org/refile.org")
                      "* MEETING with %? :MEETING:\n%U"
                      :clock-in t
                      :clock-resume t)
-                    ("c"
-                     "Code Snippet"
+                    ("n"
+                     "note"
                      entry
-                     (file "~/.emacs.d/org/snippets.org")
-                     "** Snippet: %l\n#+BEGIN_SRC %?\n%i\n#+END_SRC"
+                     (file "~/.emacs.d/org/refile.org")
+                     "* %? :NOTE:\n%U\n%a\n")
+                    ("j"
+                     "Journal"
+                     entry
+                     (file+datetree "~/.emacs.d/org/journal.org")
+                     "* %?\n%U\n"
                      :clock-in t
                      :clock-resume t))))
     #+END_SRC
@@ -642,10 +674,10 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
 
   ;; Custom agenda command definitions
   (setq org-agenda-custom-commands
-        (quote (("N" "Notes" tags "NOTE"
+        (quote (("n" "Notes" tags "NOTE"
                  ((org-agenda-overriding-header "Notes")
                   (org-tags-match-list-sublevels t)))
-                (" " "Agenda"
+                (" " "Full Agenda"
                  ((agenda "" nil)
                   (tags "REFILE"
                         ((org-agenda-overriding-header "Tasks to Refile")
@@ -708,7 +740,12 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                         ((org-agenda-overriding-header "Tasks to Archive")
                          (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
                          (org-tags-match-list-sublevels nil))))
-                 nil))))
+                 nil)
+                ("r" "Readings"
+                 ((agenda "" nil)
+                  (tags-todo "NOT READ"
+                             ((org-agenda-files '("~/.emacs.d/org/notes.org"))
+                              (org-agenda-overriding-header "To Read"))))))))
 
 #+END_SRC
 
@@ -1131,9 +1168,13 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                       :count-query "tag:lists/erlang-questions and tag:unread"
                       :key "erl")
                (:name "foss-sthlm"
-                      :query "tag:lists/lists/foss-sthlm and tag:unread"
-                      :count-query "tag:lists/lists/foss-sthlm and tag:unread"
-                      :key "fs"))))
+                      :query "tag:lists/foss-sthlm and tag:unread"
+                      :count-query "tag:lists/foss-sthlm and tag:unread"
+                      :key "os")
+               (:name "git-devel"
+                      :query "tag:lists/git and tag:unread"
+                      :count-query "tag:lists/git and tag:unread"
+                      :key "g"))))
 
    #+END_SRC
 ** RSS
@@ -1150,6 +1191,7 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                "https://jeremykun.com/feed/"
                "https://pagefault.se/atom.xml"
                "https://krebsonsecurity.com/feed/"
-               "https://www.schneier.com/blog/atom.xml")))
+               "https://www.schneier.com/blog/atom.xml"
+               "https://theness.com/neurologicablog/index.php/feed/")))
 
    #+END_SRC
