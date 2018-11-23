@@ -624,10 +624,10 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                                   (org-agenda-files :maxlevel . 9)))
        (setq org-refile-use-outline-path t)
        (setq org-refile-allow-creating-parent-nodes (quote confirm))
-       (setq org-completion-use-ido t)
-       (setq ido-default-buffer-method 'selected-window)
-       (setq ido-default-file-method 'selected-window)
        (setq org-indirect-buffer-display 'current-window)
+       (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
+       (setq org-refile-use-outline-path t)                  ; Show full paths for refiling
+
 
        (defun refile/verify-refile-target ()
          "Exclude todo keywords with a done state from refile targets"
