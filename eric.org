@@ -158,7 +158,6 @@ I like visual-line mode so let's use that
   (column-number-mode 1)
 #+END_SRC
 *** OS Specific
-
 **** Mac OSX
      I switch some of the keys in os x just since stuff brakes. I also had some path issues fixed here.
      #+BEGIN_SRC emacs-lisp :tangle yes
@@ -415,6 +414,22 @@ I like visual-line mode so let's use that
         (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
     #+END_SRC
 ** Programming Languages
+
+#+BEGIN_SRC emacs-lisp :tangle yes
+  (use-package lsp-mode
+    :ensure t
+    :commands (lsp lsp-deferred)
+    :hook (go-mode . lsp-deferred))
+
+  (use-package lsp-ui
+    :commands lsp-ui-mode)
+
+  (use-package company-lsp
+    :commands company-lsp)
+
+  (use-package helm-lsp
+    :commands helm-lsp-workspace-symbol)
+#+END_SRC
 *** LISP
     Paredit paredit paredit.
     #+BEGIN_SRC emacs-lisp :tangle yes
@@ -444,8 +459,6 @@ I like visual-line mode so let's use that
             'paredit-backward-delete
             'paredit-close-round)))
 #+END_SRC
-*** Clojure
-
 *** Elixir
     My new personal web setup is Elixir + Phoenix + Typescript.
 
@@ -512,6 +525,16 @@ I like visual-line mode so let's use that
       (add-to-list 'auto-mode-alist '("\\.hbs\\'"  . web-mode))
       (add-to-list 'auto-mode-alist '("\\.styl\\'" . web-mode))
       (add-to-list 'auto-mode-alist '("\\.eex\\'"  . web-mode))
+    #+END_SRC
+*** Go
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (defun lsp-go-install-save-hooks ()
+        (add-hook 'before-save-hook #'lsp-format-buffer t t)
+        (add-hook 'before-save-hook #'lsp-organize-imports t t))
+
+      (use-package go-mode)
+
+      (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
     #+END_SRC
 *** Rust
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -1163,18 +1186,25 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                       :query "tag:lists/bug-gnu-emacs and tag:unread"
                       :count-query "tag:lists/bug-gnu-emacs and tag:unread"
                       :key "eb")
-               (:name "erlang-questions"
-                      :query "tag:lists/erlang-questions and tag:unread"
-                      :count-query "tag:lists/erlang-questions and tag:unread"
-                      :key "erl")
                (:name "foss-sthlm"
                       :query "tag:lists/foss-sthlm and tag:unread"
                       :count-query "tag:lists/foss-sthlm and tag:unread"
                       :key "os")
-               (:name "git-devel"
-                      :query "tag:lists/git and tag:unread"
-                      :count-query "tag:lists/git and tag:unread"
-                      :key "g"))))
+               (:name "edri-ip"
+                      :query "tag:lists/edri-ip"
+                      :count-query "tag:lists/edri-ip and tag:unread"
+                      :key "ei")
+               (:name "edri-dr"
+                      :query "tag:lists/edri-dr"
+                      :count-query "tag:lists/edri-dr and tag:unread"
+                      :key "ed")
+               (:name "edri-cybercyber"
+                      :query "tag:lists/cybercyber"
+                      :count-query "tag:lists/cybercyber and tag:unread"
+                      :key "ec")
+               (:name "edri-news"
+                      :query "tag:lists/edri-news"
+                      :count-query "tag:lists/edri-news and tag:unread"))))
 
    #+END_SRC
 ** RSS
