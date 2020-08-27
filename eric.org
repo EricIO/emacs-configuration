@@ -33,7 +33,7 @@ Instead of the init.el file doing the tangle this will now just be handled with 
       (global-linum-mode t)
     #+END_SRC
 
-    I don't like the blinking cursor. Kill it.
+
     #+BEGIN_SRC emacs-lisp :tangle yes
     (blink-cursor-mode 0)
     #+END_SRC
@@ -128,6 +128,10 @@ Great now we're ready to get our packages up and running so we can start using o
         :hook (after-init . server-start))
     #+END_SRC
 ** Basic Configuration
+*** Set the font
+    #+BEGIN_SRC emacs-lisp :tangle yes
+    (set-face-attribute 'default nil :font "Fira Code" :height 160)
+    #+END_SRC
 *** Color Theme!
     For the moment I use the spacemacs-dark theme so let's load it up!
     #+BEGIN_SRC emacs-lisp :tangle yes
@@ -419,10 +423,15 @@ I like visual-line mode so let's use that
   (use-package lsp-mode
     :ensure t
     :commands (lsp lsp-deferred)
-    :hook (go-mode . lsp-deferred))
+    :hook ((go-mode . lsp-deferred)
+           (rust-mode . lsp-deferred)
+           (before-save . lsp-format-buffer)
+           (before-save . lsp-organize-imports)))
 
   (use-package lsp-ui
-    :commands lsp-ui-mode)
+    :commands lsp-ui-mode
+    :config
+    (setq lsp-ui-doc-position 'top))
 
   (use-package company-lsp
     :commands company-lsp)
@@ -540,22 +549,23 @@ I like visual-line mode so let's use that
 #+BEGIN_SRC emacs-lisp :tangle yes
   (use-package cargo)
 
-  (use-package racer
-    :config
-    (progn
-      (add-hook 'racer-mode-hook #'eldoc-mode)
-      (setq racer-cmd "~/.cargo/bin/racer")
-      (setq racer-rust-src-path "~/programming/github.com/rust-lang/rust/src")))
+  ;; (use-package racer
+  ;;   :config
+  ;;   (progn
+  ;;     (add-hook 'racer-mode-hook #'eldoc-mode)
+  ;;     (setq racer-cmd "~/.cargo/bin/racer")
+  ;;     (setq racer-rust-src-path "~/programming/github.com/rust-lang/rust/src")))
 
   (use-package flycheck-rust
-    :config
-    (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+     :config
+     (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
 
   (use-package rust-mode
     :config
     (progn
       (add-hook 'rust-mode-hook 'cargo-minor-mode)
-      (add-hook 'rust-mode-hook #'racer-mode)))
+      (add-hook 'before-save-hook #'lsp-organize-imports t t)
+      (add-hook 'before-save-hook #'lsp-format-buffer t t)))
 #+END_SRC
 ** Emacs Calc
    I've been using calc more and more for calculations and it's truly great.
@@ -598,11 +608,12 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
         org-use-fast-todo-selection t
         org-treat-S-cursor-todo-selection-as-state-change nil)
 
-  (setq org-agenda-files '("~/.emacs.d/org/bonnier.org"
+  (setq org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"
                            "~/.emacs.d/org/foss.org"
                            "~/.emacs.d/org/mathom.org"
                            "~/.emacs.d/org/orgs.org"
                            "~/.emacs.d/org/personal.org"
+                           "~/.emacs.d/org/readings.org"
                            "~/.emacs.d/org/refile.org"))
 
   (setq org-log-into-drawer "LOGBOOK")
@@ -628,7 +639,7 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                ("DONE"      :foreground "green"   :weight bold)
                ("WAITING"   :foreground "orange"  :weight bold)
                ("HOLD"      :foreground "magenta" :weight bold)
-               ("CANCELLED" :foreground "green"   :weight bold)))
+               ("CANCELLED" :foreground "yellow"   :weight bold)))
      #+END_SRC
 **** State triggers
      Tagging tasks when we do certain state changes is done to be able to filter in agenda.
@@ -697,25 +708,26 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
 
   ;; Custom agenda command definitions
   (setq org-agenda-custom-commands
-        (quote (("n" "Notes" tags "NOTE"
-                 ((org-agenda-overriding-header "Notes")
-                  (org-tags-match-list-sublevels t)))
-                (" " "Full Agenda"
+        (quote (("w" "Work"
                  ((agenda "" nil)
+
                   (tags "REFILE"
                         ((org-agenda-overriding-header "Tasks to Refile")
-                         (org-tags-match-list-sublevels nil)))
+                         (org-tags-match-list-sublevels nil)
+                         (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"))))
                   (tags-todo "-CANCELLED/!"
                              ((org-agenda-overriding-header "Stuck Projects")
                               (org-agenda-skip-function 'bh/skip-non-stuck-projects)
                               (org-agenda-sorting-strategy
-                               '(category-keep))))
+                               '(category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"))))
                   (tags-todo "-HOLD-CANCELLED/!"
                              ((org-agenda-overriding-header "Projects")
                               (org-agenda-skip-function 'bh/skip-non-projects)
                               (org-tags-match-list-sublevels 'indented)
                               (org-agenda-sorting-strategy
-                               '(category-keep))))
+                               '(category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"))))
                   (tags-todo "-CANCELLED/!NEXT"
                              ((org-agenda-overriding-header (concat "Project Next Tasks"
                                                                     (if bh/hide-scheduled-and-waiting-next-tasks
@@ -727,7 +739,8 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                               (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
                               (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
                               (org-agenda-sorting-strategy
-                               '(todo-state-down effort-up category-keep))))
+                               '(todo-state-down effort-up category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"))))
                   (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
                              ((org-agenda-overriding-header (concat "Project Subtasks"
                                                                     (if bh/hide-scheduled-and-waiting-next-tasks
@@ -738,7 +751,8 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                               (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
                               (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
                               (org-agenda-sorting-strategy
-                               '(category-keep))))
+                               '(category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"))))
                   (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
                              ((org-agenda-overriding-header (concat "Standalone Tasks"
                                                                     (if bh/hide-scheduled-and-waiting-next-tasks
@@ -749,7 +763,8 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                               (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
                               (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
                               (org-agenda-sorting-strategy
-                               '(category-keep))))
+                               '(category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"))))
                   (tags-todo "-CANCELLED+WAITING|HOLD/!"
                              ((org-agenda-overriding-header (concat "Waiting and Postponed Tasks"
                                                                     (if bh/hide-scheduled-and-waiting-next-tasks
@@ -758,11 +773,13 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                               (org-agenda-skip-function 'bh/skip-non-tasks)
                               (org-tags-match-list-sublevels nil)
                               (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)))
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"))))
                   (tags "-REFILE/"
                         ((org-agenda-overriding-header "Tasks to Archive")
                          (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
-                         (org-tags-match-list-sublevels nil))))
+                         (org-tags-match-list-sublevels nil)
+                         (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org")))))
                  nil)
                 ("r" "Readings"
                  ((agenda "" nil)
@@ -1217,10 +1234,12 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
        :config
        (setq elfeed-feeds
              '("http://nullprogram.com/feed/"
+               "https://www.scottaaronson.com/blog/?feed=rss2"
                "http://www.tedunangst.com/flak/rss"
                "https://jeremykun.com/feed/"
                "https://pagefault.se/atom.xml"
                "https://krebsonsecurity.com/feed/"
+               "https://lemire.me/blog/feed/"
                "https://www.schneier.com/blog/atom.xml"
                "https://theness.com/neurologicablog/index.php/feed/")))
 
