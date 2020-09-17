@@ -89,7 +89,7 @@ Instead of the init.el file doing the tangle this will now just be handled with 
 
       (setq package-archives
             '(("melpa" . "http://melpa.org/packages/")
-              ("org"   . "http://orgmode.org/elpa/")
+              ("org"   . "http://.org/elpa/")
               ("gnu"   . "http://elpa.gnu.org/packages/")))
 
       (when (not package-archive-contents)
@@ -685,11 +685,6 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                      "* MEETING with %? :MEETING:\n%U"
                      :clock-in t
                      :clock-resume t)
-                    ("n"
-                     "note"
-                     entry
-                     (file "~/.emacs.d/org/refile.org")
-                     "* %? :NOTE:\n%U\n%a\n")
                     ("j"
                      "Journal"
                      entry
@@ -780,6 +775,95 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                          (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
                          (org-tags-match-list-sublevels nil)
                          (org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org")))))
+                 nil)
+                ("p" "Personal"
+                 ((agenda "" nil)
+
+                  (tags "REFILE"
+                        ((org-agenda-overriding-header "Tasks to Refile")
+                         (org-tags-match-list-sublevels nil)
+                         (org-agenda-files '("~/.emacs.d/org/foss.org"
+                                             "~/.emacs.d/org/personal.org"
+                                             "~/.emacs.d/org/orgs.org"))))
+                  (tags-todo "-CANCELLED/!"
+                             ((org-agenda-overriding-header "Stuck Projects")
+                              (org-agenda-skip-function 'bh/skip-non-stuck-projects)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/foss.org"
+                                                  "~/.emacs.d/org/personal.org"
+                                                  "~/.emacs.d/org/orgs.org"))))
+                  (tags-todo "-HOLD-CANCELLED/!"
+                             ((org-agenda-overriding-header "Projects")
+                              (org-agenda-skip-function 'bh/skip-non-projects)
+                              (org-tags-match-list-sublevels 'indented)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/foss.org"
+                                                  "~/.emacs.d/org/personal.org"
+                                                  "~/.emacs.d/org/orgs.org"))))
+                  (tags-todo "-CANCELLED/!NEXT"
+                             ((org-agenda-overriding-header (concat "Project Next Tasks"
+                                                                    (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                        ""
+                                                                      " (including WAITING and SCHEDULED tasks)")))
+                              (org-agenda-skip-function 'bh/skip-projects-and-habits-and-single-tasks)
+                              (org-tags-match-list-sublevels t)
+                              (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-sorting-strategy
+                               '(todo-state-down effort-up category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/foss.org"
+                                                  "~/.emacs.d/org/personal.org"
+                                                  "~/.emacs.d/org/orgs.org"))))
+                  (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
+                             ((org-agenda-overriding-header (concat "Project Subtasks"
+                                                                    (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                        ""
+                                                                      " (including WAITING and SCHEDULED tasks)")))
+                              (org-agenda-skip-function 'bh/skip-non-project-tasks)
+                              (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/foss.org"
+                                                  "~/.emacs.d/org/personal.org"
+                                                  "~/.emacs.d/org/orgs.org"))))
+                  (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
+                             ((org-agenda-overriding-header (concat "Standalone Tasks"
+                                                                    (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                        ""
+                                                                      " (including WAITING and SCHEDULED tasks)")))
+                              (org-agenda-skip-function 'bh/skip-project-tasks)
+                              (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-sorting-strategy
+                               '(category-keep))
+                              (org-agenda-files '("~/.emacs.d/org/foss.org"
+                                                  "~/.emacs.d/org/personal.org"
+                                                  "~/.emacs.d/org/orgs.org"))))
+                  (tags-todo "-CANCELLED+WAITING|HOLD/!"
+                             ((org-agenda-overriding-header (concat "Waiting and Postponed Tasks"
+                                                                    (if bh/hide-scheduled-and-waiting-next-tasks
+                                                                        ""
+                                                                      " (including WAITING and SCHEDULED tasks)")))
+                              (org-agenda-skip-function 'bh/skip-non-tasks)
+                              (org-tags-match-list-sublevels nil)
+                              (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+                              (org-agenda-files '("~/.emacs.d/org/foss.org"
+                                                  "~/.emacs.d/org/personal.org"
+                                                  "~/.emacs.d/org/orgs.org"))))
+                  (tags "-REFILE/"
+                        ((org-agenda-overriding-header "Tasks to Archive")
+                         (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
+                         (org-tags-match-list-sublevels nil)
+                         (org-agenda-files '("~/.emacs.d/org/foss.org"
+                                             "~/.emacs.d/org/personal.org"
+                                             "~/.emacs.d/org/orgs.org")))))
                  nil)
                 ("r" "Readings"
                  ((agenda "" nil)
@@ -1155,6 +1239,18 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
 
   (add-hook 'org-clock-out-hook 'bh/clock-out-maybe 'append)
 #+END_SRC
+*** Org drill
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-drill
+    :config (progn
+              (add-to-list 'org-modules 'org-drill)
+              (setq org-drill-learn-fraction 0.25)
+              (setq org-drill-add-random-noise-to-intervals-p t)
+              (setq org-drill-scope (directory-files "~/.emacs.d/org/drill"))))
+
+#+End_src
+
 ** Email
    I currently use notmuch as my email client. Curious about gnus someday..
    #+BEGIN_SRC emacs-lisp :tangle yes
