@@ -341,62 +341,59 @@ I like visual-line mode so let's use that
       (use-package flycheck
         :init (global-flycheck-mode))
     #+END_SRC
-** Helm
-   Helm gives super nice completion and narrowing with fuzzy search.
+** Ivy, Swiper, Counsel
+   Recently I've been having some issues with helm and I've been wanting to try out ivy, with swiper and counsel.
+   #+begin_src emacs-lisp :tangle yes
+     (use-package counsel :ensure
+       :commands (counsel-load-theme
+                  counsel-bookmark)
+       :bind* (("C-c i" . counsel-imenu)
+               ("C-x C-f" . counsel-find-file)
+               ("C-x C-b" . ivy-switch-buffer)
+               ("C-c C-/" . counsel-rg)
+               ("s-<backspace>" . ivy-switch-buffer)
+               ("M-x" . counsel-M-x))
+       :config
+       (setq counsel-find-file-ignore-regexp
+             (concat "\\(?:\\`[#.]\\)\\|\\(?:[#~]\\'\\)"
+                     "\\|\\.x\\'\\|\\.d\\'\\|\\.o\\'"
+                     "\\|\\.aux\\'"))
 
-   #+BEGIN_SRC emacs-lisp :tangle yes
-     (use-package helm
-       :diminish helm-mode
-       :init
-       (progn
-         (require 'helm-config)
-         (setq helm-candidate-number-limit 100
-               helm-idle-delay 0.0
-               helm-input-idle-delay 0.01
-               helm-quick-update t
-               helm-ff-skip-boring-files t
-               helm-M-x-requires-pattern nil)
-         (helm-mode))
-       :bind (("C-c h"   . helm-mini)
-              ("C-h a"   . helm-apropos)
-              ("C-x C-b" . helm-buffers-list)
-              ("C-x b"   . helm-buffers-list)
-              ("M-y"     . helm-show-kill-ring)
-              ("M-x"     . helm-M-x)
-              ("C-x c o" . helm-occur)
-              ("C-x c s" . helm-swoop)
-              ("C-x c y" . helm-yas-complete)
-              ("C-x c Y" . helm-yas-create-snippet-on-region)
-              ("C-x C-f" . helm-for-files)
-              ("C-x f"   . helm-mini)
-              ("C-x C-f" . helm-find-files)))
+       (setq counsel-locate-cmd 'counsel-locate-cmd-mdfind)
+       (setq counsel-find-file-at-point t))
+   #+end_src
+   
+   #+begin_src emacs-lisp :tangle yes
+     (use-package ivy :ensure t
+       :diminish (ivy-mode . "")
+       :bind (:map ivy-mode-map
+                   ("C-'" . ivy-avy))
+       :config (progn
+                 (ivy-mode 1)
+                 (setq ivy-use-virtual-buffers t)
+                 (setq ivy-height 10)
+                 (setq ivy-count-format "")
+                 (setq ivy-initial-inputs-alist nil)))
+   #+end_src
 
-     (ido-mode -1)
-   #+END_SRC
-
-   #+BEGIN_SRC emacs-lisp :tangle yes
-     (use-package helm-swoop
-       :bind (("C-S-s" . helm-swoop)))
-   #+END_SRC
+   #+begin_src emacs-lisp :tangle yes
+     (global-set-key "\C-s" 'swiper)
+   #+end_src
 ** Projectile
    Projectile is a great package for finding your way around in projects.
    #+BEGIN_SRC emacs-lisp :tangle yes
-     (use-package projectile
-       :diminish projectile-mode
+     (use-package projectile :ensure t :demand
        :bind ("C-c TAB" . projectile-find-other-file)
        :config
-       (progn
-         (setq projectile-completion-system 'default
-               projectile-enable-caching t
-               projectile-indexing-method 'alien)
-         (add-to-list 'projectile-globally-ignored-directories "node-modules")
-         (add-to-list 'projectile-globally-ignored-directories "_build")
-         (add-to-list 'projectile-globally-ignored-directories "deps")
-         (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
-       (projectile-global-mode))
-
-     (use-package helm-projectile)
-   #+END_SRC
+       (setq projectile-completion-system 'default)
+       (setq projectile-enable-caching t)
+       (setq projectile-indexing-method 'alien)
+       (add-to-list 'projectile-globally-ignored-directories "node-modules")
+       (add-to-list 'projectile-globally-ignored-directories "_build")
+       (add-to-list 'projectile-globally-ignored-directories "deps")
+       (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+       (projectile-mode +1))
+   #+End_SRC
 ** Moving around
 *** Avy mode
     Avy mode allows me to jump around a bit more efficiently.
@@ -435,9 +432,6 @@ I like visual-line mode so let's use that
 
   (use-package company-lsp
     :commands company-lsp)
-
-  (use-package helm-lsp
-    :commands helm-lsp-workspace-symbol)
 #+END_SRC
 *** LISP
     Paredit paredit paredit.
@@ -600,27 +594,40 @@ I like visual-line mode so let's use that
 ** Org
 Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndStates][norang]]s configuration. I still have some cleanup to do but it suits me for now.
 #+BEGIN_SRC emacs-lisp :tangle yes
-  (require 'org)
+  (defun org-archive-done-tasks ()
+    (interactive)
+    (org-map-entries
+     (lambda ()
+       (org-archive-subtree)
+       (setq org-map-continue-from (org-element-property :begin (org-element-at-point))))
+     "/DONE" 'tree))
 
-  (setq org-directory "~/.emacs.d/org"
-        org-default-notes-file "~/.emacs.d/org/refile.org"
-        org-log-done 'time
-        org-use-fast-todo-selection t
-        org-treat-S-cursor-todo-selection-as-state-change nil)
 
-  (setq org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"
-                           "~/.emacs.d/org/foss.org"
-                           "~/.emacs.d/org/mathom.org"
-                           "~/.emacs.d/org/orgs.org"
-                           "~/.emacs.d/org/personal.org"
-                           "~/.emacs.d/org/readings.org"
-                           "~/.emacs.d/org/refile.org"))
+  (use-package org
+    :config
+    (setq org-directory "~/.emacs.d/org"
+          org-default-notes-file "~/.emacs.d/org/refile.org"
+          org-log-done 'time
+          org-use-fast-todo-selection t
+          org-treat-S-cursor-todo-selection-as-state-change nil)
+    (setq org-agenda-files '("~/.emacs.d/org/internetstiftelsen.org"
+                             "~/.emacs.d/org/foss.org"
+                             "~/.emacs.d/org/mathom.org"
+                             "~/.emacs.d/org/orgs.org"
+                             "~/.emacs.d/org/personal.org"
+                             "~/.emacs.d/org/readings.org"
+                             "~/.emacs.d/org/refile.org"))
+    (setq org-log-into-drawer "LOGBOOK")
+    (setq org-clock-intro-drawer 1)
+    :bind (:map org-mode-map
+                ("<C-return>" . org-insert-subheading)
+                ("<C-S-return>". org-insert-todo-subheding)
+                ("C-c d" . org-archive-done-tasks)))
 
-  (setq org-log-into-drawer "LOGBOOK")
-  (setq org-clock-intro-drawer 1)
 
   (global-set-key (kbd "C-c c") 'org-capture)
   (global-set-key (kbd "C-c a") 'org-agenda)
+
 #+END_SRC
 *** Org-todo
 **** Keywords states
@@ -1252,74 +1259,25 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
 #+End_src
 
 ** Email
-   I currently use notmuch as my email client. Curious about gnus someday..
-   #+BEGIN_SRC emacs-lisp :tangle yes
-     (use-package notmuch
-       :init
-       (progn
-         (setq mail-host-address "pagefault.se")
-         (setq user-full-name "Eric Skoglund")
-         (setq user-mail-adress "eric@pagefault.se")
-         (setq mail-user-agent 'message-user-agent)
-         (setq message-send-mail-function 'message-send-mail-with-sendmail)
-         (setq message-kill-buffer-on-exit t)
-         (setq mail-specify-envelope-from t)
-         (setq sendmail-program "/usr/bin/msmtp"
-               mail-specify-envelope-from t
-               mail-envelope-from 'header
-               message-sendmail-envelope-from 'header)
-         (setq notmuch-crypto-process-mime t))
-       :config
-       (setq notmuch-saved-searches
-             '((:name "inbox"
-                      :query "tag:inbox"
-                      :count-query "tag:inbox and tag:unread"
-                      :key "i")
-               (:name "unread"
-                      :query "tag:unread"
-                      :key "u"
-                      :count-query "tag:unread")
-               (:name "flagged"
-                      :query "tag:flagged"
-                      :key "f"
-                      :count-query "tag:flagged and tag:unread")
-               (:name "drafts"
-                      :query "tag:draft"
-                      :count-query "tag:draft"
-                      :key "d")
-               (:name "all mail"
-                      :query "*"
-                      :count-query "*"
-                      :key "a")
-               (:name "emacs-devel-unread"
-                      :query "tag:lists and +emacs-devel and tag:unread"
-                      :count-query "tag:lists and +emacs-devel and tag:unread"
-                      :key "em")
-               (:name "emacs-bugs"
-                      :query "tag:lists/bug-gnu-emacs and tag:unread"
-                      :count-query "tag:lists/bug-gnu-emacs and tag:unread"
-                      :key "eb")
-               (:name "foss-sthlm"
-                      :query "tag:lists/foss-sthlm and tag:unread"
-                      :count-query "tag:lists/foss-sthlm and tag:unread"
-                      :key "os")
-               (:name "edri-ip"
-                      :query "tag:lists/edri-ip"
-                      :count-query "tag:lists/edri-ip and tag:unread"
-                      :key "ei")
-               (:name "edri-dr"
-                      :query "tag:lists/edri-dr"
-                      :count-query "tag:lists/edri-dr and tag:unread"
-                      :key "ed")
-               (:name "edri-cybercyber"
-                      :query "tag:lists/cybercyber"
-                      :count-query "tag:lists/cybercyber and tag:unread"
-                      :key "ec")
-               (:name "edri-news"
-                      :query "tag:lists/edri-news"
-                      :count-query "tag:lists/edri-news and tag:unread"))))
+   We're finally doing it. Going to gnus. Let's go. The main config for gnus
+   can be found in the .gnus file.
+   #+begin_src emacs-lisp :tangle yes
+     ;; We should be able to have several accounts here
+     ;; make user-mail-address dynamic.
+     (setq user-full-name "Eric Skoglund")
+     (setq user-mail-address "eric@pagefault.se")
+     (setq gnus-init-file "~/.emacs.d/.gnus")
 
-   #+END_SRC
+     (setq message-send-mail-function 'smtpmail-send-it
+           smtpmail-auth-credentials "~/.authinfo.gpg"
+           smtpmail-smtp-server "127.0.0.1"
+           smtpmail-stream-type 'starttls
+           smtpmail-smtp-service 1025)
+
+     (require 'gnutls)
+     (add-to-list 'gnutls-trustfiles (expand-file-name "~/.config/protonmail/bridge/cert.pem"))
+   #+end_src
+
 ** RSS
    Elfeed is my RSS reader of choice. Not entirely happy with how it handles flowing the text
    and showing images.
