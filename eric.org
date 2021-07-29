@@ -88,14 +88,16 @@ Instead of the init.el file doing the tangle this will now just be handled with 
       (package-initialize)
 
       (setq package-archives
-            '(("melpa" . "http://melpa.org/packages/")
-              ("org"   . "http://.org/elpa/")
-              ("gnu"   . "http://elpa.gnu.org/packages/")))
+            '(("melpa" . "https://melpa.org/packages/")
+              ("org"   . "https://orgmode.org/elpa/")
+              ("gnu"   . "https://elpa.gnu.org/packages/")))
 
       (when (not package-archive-contents)
         (package-refresh-contents))
-    #+END_SRC
 
+      (custom-set-variables
+       '(gnutls-algorithm-priority "normal:-vers-tls1.3"))
+    #+END_SRC
 
 **** use-package
      Next we're going to be installing =use-package= to help us install and configure out packages.
@@ -133,9 +135,9 @@ Great now we're ready to get our packages up and running so we can start using o
     (set-face-attribute 'default nil :font "Fira Code" :height 160)
     #+END_SRC
 *** Color Theme!
-    For the moment I use the spacemacs-dark theme so let's load it up!
+    For the moment I use the solarized-light theme so let's load it up!
     #+BEGIN_SRC emacs-lisp :tangle yes
-      (load-theme 'spacemacs-dark t)
+      (load-theme 'solarized-light t)
       (global-font-lock-mode t)
     #+END_SRC
 
@@ -191,6 +193,16 @@ I like visual-line mode so let's use that
       (setq vc-make-backup-files t)
       (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list" t)))
     #+END_SRC
+*** Eel.el
+    Eel.el is my own little collection of usefull functions.
+    #+begin_src emacs-lisp :tangle yes
+      (use-package eel
+        :ensure nil
+        :demand
+        :bind (("C-c C-d" . eel/duplicate-line)
+               ("C-c d" . eel/insert-date-now)))
+    #+end_src
+    
 *** General Editing
     Some bits and bob
     #+BEGIN_SRC emacs-lisp :tangle yes
@@ -278,7 +290,8 @@ I like visual-line mode so let's use that
        (global-set-key (kbd "C-x p") 'replace-string)
        (global-set-key (kbd "C-c r") 'comment-region)
        (global-set-key (kbd "C-c u") 'uncomment-region)
-       (global-set-key (kbd "C-c s") 'eshell)
+       (global-set-key (kbd "C-c e") 'eshell)
+       (global-set-key (kbd "C-c s") 'flyspell-region)
      #+END_SRC
 
 ** Autocomplete and snippets
@@ -422,6 +435,7 @@ I like visual-line mode so let's use that
     :commands (lsp lsp-deferred)
     :hook ((go-mode . lsp-deferred)
            (rust-mode . lsp-deferred)
+           (haskell-mode . lsp-deferred)
            (before-save . lsp-format-buffer)
            (before-save . lsp-organize-imports)))
 
@@ -467,39 +481,6 @@ I like visual-line mode so let's use that
 
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package elixir-mode)
-    #+END_SRC
-*** Python
-    Elpy is a neat environment for python in emacs. It does require rope, jedi, flake8a and importmagic
-    to be available globally so remember to install that!
-    #+BEGIN_SRC emacs-lisp :tangle yes
-      (use-package elpy
-        :init
-        (elpy-enable))
-    #+END_SRC
-*** JavaScript
-    One of the main programming languages at work so need to be slick.
-
-    #+BEGIN_SRC emacs-lisp :tangle yes
-      (use-package js2-refactor)
-      (use-package xref-js2)
-      (use-package js2-mode
-        :mode "\\.js\\'"
-        :init
-        (add-hook 'js2-mode-hook #'js2-refactor-mode)
-        (add-hook 'js2-mode-hook (lambda ()
-                                   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-        (js2r-add-keybindings-with-prefix "C-c C-r")
-        :bind (:map js2-mode-map
-                    ("C-k" . js2r-kill)))
-
-
-      (define-key js2-mode-map (kbd "M-.") nil)
-      (add-to-list 'auto-mode-alist '("\\.jsm\\'" .js2-mode))
-    #+END_SRC
-    #+BEGIN_SRC emacs-lisp :tangle yes
-      (use-package indium
-        :config
-        (add-hook 'js2-mode-hook #'indium-interaction-mode))
     #+END_SRC
     #+BEGIN_SRC emacs-lisp :tangle yes
       (use-package json-mode
@@ -561,6 +542,11 @@ I like visual-line mode so let's use that
       (add-hook 'before-save-hook #'lsp-organize-imports t t)
       (add-hook 'before-save-hook #'lsp-format-buffer t t)))
 #+END_SRC
+*** Idris
+    #+BEGIN_SRC emacs-lisp :tangle yes
+      (add-to-list 'load-path "~/.emacs.d/site-lisp/idris2-mode")
+      (require 'idris2-mode)
+    #+END_SRC
 ** Emacs Calc
    I've been using calc more and more for calculations and it's truly great.
    #+BEGIN_SRC emacs-lisp :tangle yes
@@ -615,7 +601,6 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                              "~/.emacs.d/org/mathom.org"
                              "~/.emacs.d/org/orgs.org"
                              "~/.emacs.d/org/personal.org"
-                             "~/.emacs.d/org/readings.org"
                              "~/.emacs.d/org/refile.org"))
     (setq org-log-into-drawer "LOGBOOK")
     (setq org-clock-intro-drawer 1)
@@ -624,9 +609,15 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                 ("<C-S-return>". org-insert-todo-subheding)
                 ("C-c d" . org-archive-done-tasks)))
 
+  (use-package org-contacts
+    :ensure nil
+    :after org
+    :custom (org-contacts-files '("~/.emacs.d/org/contacts.org")))
+
 
   (global-set-key (kbd "C-c c") 'org-capture)
   (global-set-key (kbd "C-c a") 'org-agenda)
+  (global-set-key (kbd "C-c l") 'org-store-link)
 
 #+END_SRC
 *** Org-todo
@@ -698,7 +689,12 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                      (file+datetree "~/.emacs.d/org/journal.org")
                      "* %?\n%U\n"
                      :clock-in t
-                     :clock-resume t))))
+                     :clock-resume t)
+                    ("c"
+                     "Contact"
+                     entry
+                     (file "~/.emacs.d/org/contacts.org")
+                     "* %^{NAME}\n:PROPERTIES:\n:EMAIL: %^{EMAIL}\n:TAGS: %^{TAGS}\n:END:"))))
     #+END_SRC
 *** Org Agenda
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -1268,11 +1264,9 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
      (setq user-mail-address "eric@pagefault.se")
      (setq gnus-init-file "~/.emacs.d/.gnus")
 
-     (setq message-send-mail-function 'smtpmail-send-it
-           smtpmail-auth-credentials "~/.authinfo.gpg"
-           smtpmail-smtp-server "127.0.0.1"
-           smtpmail-stream-type 'starttls
-           smtpmail-smtp-service 1025)
+     (setq message-send-mail-function 'message-send-mail-with-sendmail)
+     (setq sendmail-program "/usr/bin/msmtp")
+     (setq gnus-permanently-visible-groups ".*")
 
      (require 'gnutls)
      (add-to-list 'gnutls-trustfiles (expand-file-name "~/.config/protonmail/bridge/cert.pem"))
@@ -1292,9 +1286,8 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                "http://www.tedunangst.com/flak/rss"
                "https://jeremykun.com/feed/"
                "https://pagefault.se/atom.xml"
-               "https://krebsonsecurity.com/feed/"
                "https://lemire.me/blog/feed/"
-               "https://www.schneier.com/blog/atom.xml"
+               "http://wingolog.org/feed/atom"
+               "https://drewdevault.com/blog/index.xml"
                "https://theness.com/neurologicablog/index.php/feed/")))
-
    #+END_SRC
