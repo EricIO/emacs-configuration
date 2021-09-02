@@ -67,16 +67,19 @@ Instead of the init.el file doing the tangle this will now just be handled with 
                                     (lambda (fg) (set-face-foreground 'mode-line fg))
                                     orig-fg))))
    #+END_SRC
-*** Load Path
+*** Load Path and exec path
     Now is also a good time to setup some load path stuff.
 
     #+BEGIN_SRC emacs-lisp :tangle yes
       (add-to-list 'load-path "~/.emacs.d/elpa")
       (add-to-list 'load-path "~/.emacs.d/themes")
       (add-to-list 'load-path "~/.emacs.d/elisp")
-
+      
       (define-inline emacs-path (path)
         (expand-file-name path user-emacs-directory))
+      
+      ;; For now only needed for gopls
+      (add-to-list 'exec-path "~/go/bin")
     #+END_SRC
 
 *** Package
@@ -362,6 +365,7 @@ I like visual-line mode so let's use that
                   counsel-bookmark)
        :bind* (("C-c i" . counsel-imenu)
                ("C-x C-f" . counsel-find-file)
+               ("C-x C-r" . counsel-recentf)
                ("C-x C-b" . ivy-switch-buffer)
                ("C-c C-/" . counsel-rg)
                ("s-<backspace>" . ivy-switch-buffer)
@@ -371,7 +375,7 @@ I like visual-line mode so let's use that
              (concat "\\(?:\\`[#.]\\)\\|\\(?:[#~]\\'\\)"
                      "\\|\\.x\\'\\|\\.d\\'\\|\\.o\\'"
                      "\\|\\.aux\\'"))
-
+     
        (setq counsel-locate-cmd 'counsel-locate-cmd-mdfind)
        (setq counsel-find-file-at-point t))
    #+end_src
@@ -456,7 +460,6 @@ I like visual-line mode so let's use that
           (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
           (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
           (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-          (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
           (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
           (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)))
 #+END_SRC
@@ -1289,5 +1292,8 @@ Much of this is /borrowed/ from [[http://doc.norang.ca/org-mode.html#TasksAndSta
                "https://lemire.me/blog/feed/"
                "http://wingolog.org/feed/atom"
                "https://drewdevault.com/blog/index.xml"
-               "https://theness.com/neurologicablog/index.php/feed/")))
+               "https://theness.com/neurologicablog/index.php/feed/"
+               "https://writing.kemitchell.com/feed.xml"
+               "https://bzg.fr/index.xml"
+               "https://berthub.eu/articles/index.xml")))
    #+END_SRC
